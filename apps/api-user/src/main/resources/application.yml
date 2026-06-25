@@ -18,6 +18,17 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3307/ott}
     username: ${SPRING_DATASOURCE_USERNAME:ott}
     password: ${SPRING_DATASOURCE_PASSWORD:ottpw}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      timeout: 3000ms
+
 
   # kakao
   security:
@@ -67,10 +78,14 @@ management:
       probes:
         enabled: true
 
+decorator:
+  datasource:
+    enabled: false #기본 비활성화
+
 # JWT 설정
 jwt:
   secret: ${JWT_SECRET_BASE64:}
-  access-token-expiry: 1800000       # 30분
+  access-token-expiry: 180000000       # 30분
   refresh-token-expiry: 1209600000   # 14일
 
 springdoc:

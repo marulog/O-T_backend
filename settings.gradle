@@ -11,6 +11,7 @@ include(
         ":modules:infra-db",
         ":modules:infra-mq",
         ":modules:infra-s3",
+        ":modules:infra-redis",
         ":modules:common-web",
         ":modules:common-security"
 )
