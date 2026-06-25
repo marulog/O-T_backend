@@ -11,9 +11,9 @@ import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.ott.domain.contents.domain.QContents.contents;
 import static com.ott.domain.media.domain.QMedia.media;
@@ -79,19 +79,26 @@ public class ShortFormRepositoryImpl implements ShortFormRepositoryCustom {
 
     @Override
     public List<ShortForm> findRecommendedShortForms(Map<Long, Integer> tagScores, int limit, long offset) {
-        
+
         // 1. 시청 이력이 없는 신규 유저 방어 로직: 원본 콘텐츠의 북마크 순으로 노출
         if (tagScores == null || tagScores.isEmpty()) {
 
-            // 시리즈 소속이면 시리즈 북마크, 단편이면 단편 북마크를 기준으로 
+            QMedia contentsMedia = new QMedia("contentsMedia");
+            QMedia seriesMedia = new QMedia("seriesMedia");
+
+            // 시리즈 소속이면 시리즈 북마크, 단편이면 단편 북마크를 기준으로
             NumberExpression<Long> originBookmarkCount = new CaseBuilder()
                     .when(shortForm.series.isNotNull()).then(series.media.bookmarkCount)
                     .otherwise(contents.media.bookmarkCount);
 
 
             return queryFactory.selectFrom(shortForm)
-                    .leftJoin(shortForm.series, series)
-                    .leftJoin(shortForm.contents, contents)
+                    .join(shortForm.media, media).fetchJoin()
+                    .join(media.uploader, member).fetchJoin()
+                    .leftJoin(shortForm.series, series).fetchJoin()
+                    .leftJoin(series.media, seriesMedia).fetchJoin()
+                    .leftJoin(shortForm.contents, contents).fetchJoin()
+                    .leftJoin(contents.media, contentsMedia).fetchJoin()
                     .where(shortForm.status.eq(Status.ACTIVE),
                             shortForm.media.mediaStatus.eq(MediaStatus.COMPLETED)) // 활성 상태의 숏폼만
                     // 무한 스와이프를 위해 DB에서 정렬 후 자름
@@ -102,6 +109,14 @@ public class ShortFormRepositoryImpl implements ShortFormRepositoryCustom {
         }
 
         // 2. 가중치 합산 로직: 숏폼의 '본편 미디어(Media)'에 달린 태그와 유저 취향 점수를 매칭
+//        // series가 있으면 series.media.id, 없으면 contents.media.id로 확정
+//        // join절에서 값을 확정하여 index를 타도록 유도
+        NumberExpression<Long> originMediaId = new CaseBuilder()
+                .when(shortForm.series.isNotNull())
+                .then(series.media.id)
+                .otherwise(contents.media.id);
+
+
         // 초기값은 0으로 표기.
         NumberExpression<Integer> scoreExpression = Expressions.asNumber(0);
 
@@ -114,32 +129,70 @@ public class ShortFormRepositoryImpl implements ShortFormRepositoryCustom {
             );
         }
 
-        return queryFactory.selectFrom(shortForm)
+        // Step1 : GROUP BY + SUM이 필요한 부분 → ID만 조회 -> 추천 점수 계산, 정렬
+        List<Long> rankedIds = queryFactory
+                .select(shortForm.id)
+                .from(shortForm)
                 .leftJoin(shortForm.series, series)
                 .leftJoin(shortForm.contents, contents)
-                // 숏폼의 부모(시리즈 or 단편)에 따라 정확한 원본 태그를 조인!
-                .leftJoin(mediaTag).on(
-                        shortForm.series.isNotNull().and(mediaTag.media.id.eq(series.media.id))
-                        .or(shortForm.series.isNull().and(mediaTag.media.id.eq(contents.media.id)))
+                .leftJoin(mediaTag).on(mediaTag.media.id.eq(originMediaId))
+                .where(
+                        shortForm.status.eq(Status.ACTIVE),
+                        shortForm.media.mediaStatus.eq(MediaStatus.COMPLETED)
                 )
-                .where(shortForm.status.eq(Status.ACTIVE),
-                        shortForm.media.mediaStatus.eq(MediaStatus.COMPLETED)) // 활성 상태의 숏폼만
                 .groupBy(shortForm.id)
                 .orderBy(scoreExpression.sum().desc(), shortForm.createdDate.desc(), shortForm.id.desc())
                 .limit(limit)
                 .offset(offset)
                 .fetch();
+
+        if (rankedIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Step2 : 확정된 ID로 fetchJoin (GROUP BY 없음)
+        QMedia contentsMedia = new QMedia("contentsMedia");
+        QMedia seriesMedia = new QMedia("seriesMedia");
+
+        List<ShortForm> result = queryFactory
+                .selectFrom(shortForm)
+                .join(shortForm.media, media).fetchJoin()
+                .join(media.uploader, member).fetchJoin()
+                .leftJoin(shortForm.contents, contents).fetchJoin()
+                .leftJoin(contents.media, contentsMedia).fetchJoin()
+                .leftJoin(shortForm.series, series).fetchJoin()
+                .leftJoin(series.media, seriesMedia).fetchJoin()
+                .where(shortForm.id.in(rankedIds))
+                .fetch();
+
+        // 순서 보존
+        Map<Long, ShortForm> resultMap = result.stream()
+                .collect(Collectors.toMap(ShortForm::getId, Function.identity()));
+
+        return rankedIds.stream()
+                .map(resultMap::get)
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     @Override
     public List<ShortForm> findLatestShortForms(int limit, long offset, List<Long> excludeIds) {
-        
-        // 추천 리스트에 이미 들어간 숏폼 ID 제외 
+
+        QMedia contentsMedia = new QMedia("contentsMedia");
+        QMedia seriesMedia = new QMedia("seriesMedia");
+
+        // 추천 리스트에 이미 들어간 숏폼 ID 제외
         BooleanExpression excludeCondition = (excludeIds != null && !excludeIds.isEmpty())
                 ? shortForm.media.id.notIn(excludeIds)
                 : null;
 
         return queryFactory.selectFrom(shortForm)
+                .join(shortForm.media, media).fetchJoin()              // sf → media 미리 로딩
+                .join(media.uploader, member).fetchJoin()               // media → member 미리 로딩
+                .leftJoin(shortForm.contents, contents).fetchJoin()     // sf → contents 미리 로딩
+                .leftJoin(contents.media, contentsMedia).fetchJoin()    // contents → media 미리 로딩
+                .leftJoin(shortForm.series, series).fetchJoin()         // sf → series 미리 로딩
+                .leftJoin(series.media, seriesMedia).fetchJoin()        // series → media 미리 로딩
                 .where(
                         excludeCondition,
                         shortForm.status.eq(Status.ACTIVE),
