@@ -66,7 +66,8 @@ public class SecurityConfig {
                                 "/auth/reissue",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/swagger-resources/**"
+                                "/swagger-resources/**",
+                                "/test/auth/**"
                         ).permitAll()
 
                         /*
