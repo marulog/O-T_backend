@@ -8,6 +8,7 @@ import com.ott.api_admin.series.dto.response.SeriesTitleListResponse;
 import com.ott.api_admin.series.dto.response.SeriesUpdateResponse;
 import com.ott.api_admin.series.dto.response.SeriesUploadResponse;
 import com.ott.api_admin.series.mapper.BackOfficeSeriesMapper;
+import com.ott.api_admin.trending.event.TrendingCacheInvalidationEvent;
 import com.ott.api_admin.upload.support.MediaTagLinker;
 import com.ott.api_admin.upload.support.UploadHelper;
 import com.ott.common.web.exception.BusinessException;
@@ -24,6 +25,7 @@ import com.ott.domain.member.domain.Member;
 import com.ott.domain.series.domain.Series;
 import com.ott.domain.series.repository.SeriesRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +48,7 @@ public class BackOfficeSeriesService {
     private final SeriesRepository seriesRepository;
     private final UploadHelper uploadHelper;
     private final MediaTagLinker mediaTagLinker;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public PageResponse<SeriesListResponse> getSeries(int page, int size, String searchWord) {
@@ -190,6 +193,8 @@ public class BackOfficeSeriesService {
 
         mediaTagRepository.deleteAllByMedia_Id(media.getId());
         mediaTagLinker.linkTags(media, request.categoryId(), request.tagIdList());
+
+        eventPublisher.publishEvent(new TrendingCacheInvalidationEvent());
 
         return backOfficeSeriesMapper.toSeriesUpdateResponse(
                 seriesId,

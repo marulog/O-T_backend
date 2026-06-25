@@ -43,11 +43,17 @@ public class PlaylistStrategyService {
     private final WatchHistoryRepository watchHistoryRepository;
     private final ContentsRepository contentsRepository;
     private final PlaybackRepository playbackRepository;
+    private final TrendingCacheService trendingCacheService;
 
     public PageResponse<PlaylistResponse> getPlaylists(PlaylistCondition condition, Pageable pageable) {
-        
+
         if (condition.getContentSource() == null) {
-             throw new BusinessException(ErrorCode.INVALID_PLAYLIST_SOURCE); 
+            throw new BusinessException(ErrorCode.INVALID_PLAYLIST_SOURCE);
+        }
+
+        // 신규: TRENDING 캐시 사
+        if (condition.getContentSource() == ContentSource.TRENDING) {
+            return getTrendingFromCache(condition, pageable);
         }
 
         // 1. 전략 선택 및 1차 데이터 조회
@@ -68,32 +74,32 @@ public class PlaylistStrategyService {
                 mediaToTargetIdMap.put(media.getId(), media.getId());
             }
         }
-        
+
         // List<Long> targetMediaIds = new ArrayList<>(mediaToTargetIdMap.values());
         List<Long> targetMediaIds = mediaToTargetIdMap.values().stream()
-                                    .filter(java.util.Objects::nonNull)
-                                    .distinct()
-                                    .toList();
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
 
-        
+
         // 재생 시간(duration) 맵 세팅
-        final Map<Long, Integer> durationMap = targetMediaIds.isEmpty() ? new HashMap<>() : 
-            contentsRepository.findAllByMediaIdIn(targetMediaIds).stream()
-                .collect(Collectors.toMap(
-                        c -> c.getMedia().getId(), 
-                        c -> c.getDuration() != null ? c.getDuration() : 0, 
-                        (existing, replacement) -> existing
-                ));
-                
-        // 이어보기 지점(positionSec) 맵 세팅 
+        final Map<Long, Integer> durationMap = targetMediaIds.isEmpty() ? new HashMap<>() :
+                contentsRepository.findAllByMediaIdIn(targetMediaIds).stream()
+                        .collect(Collectors.toMap(
+                                c -> c.getMedia().getId(),
+                                c -> c.getDuration() != null ? c.getDuration() : 0,
+                                (existing, replacement) -> existing
+                        ));
+
+        // 이어보기 지점(positionSec) 맵 세팅
         final Map<Long, Integer> playbackMap = (memberId == null || targetMediaIds.isEmpty()) ? new HashMap<>() :
-            playbackRepository.findAllByMemberIdAndMediaIds(memberId, targetMediaIds).stream()
-                .collect(Collectors.toMap(
-                        p -> p.getContents().getMedia().getId(), 
-                        p -> p.getPositionSec() != null ? p.getPositionSec() : 0,
-                        (existing, replacement) -> existing
-                ));
-      
+                playbackRepository.findAllByMemberIdAndMediaIds(memberId, targetMediaIds).stream()
+                        .collect(Collectors.toMap(
+                                p -> p.getContents().getMedia().getId(),
+                                p -> p.getPositionSec() != null ? p.getPositionSec() : 0,
+                                (existing, replacement) -> existing
+                        ));
+
         // 3. Entity -> DTO 변환
         List<PlaylistResponse> contentList = mediaPage.getContent().stream()
                 .map(media -> {
@@ -107,31 +113,49 @@ public class PlaylistStrategyService {
                 .toList();
 
 
-        // 4. PageInfo 생성 
+        // 4. PageInfo 생성
         PageInfo pageInfo = PageInfo.toPageInfo(
-                mediaPage.getNumber(), 
-                mediaPage.getTotalPages(), 
+                mediaPage.getNumber(),
+                mediaPage.getTotalPages(),
                 (int) mediaPage.getTotalElements()
         );
 
         return PageResponse.toPageResponse(pageInfo, contentList);
     }
 
+    private PageResponse<PlaylistResponse> getTrendingFromCache(PlaylistCondition condition, Pageable pageable) {
+        List<PlaylistResponse> all = trendingCacheService.getTrending().getItems();
+
+        Long exclude = condition.getExcludeMediaId();
+        List<PlaylistResponse> filtered = (exclude == null) ? all
+                : all.stream().filter(r -> !exclude.equals(r.getMediaId())).toList();
+
+        int from = (int) pageable.getOffset();
+        int to   = Math.min(from + pageable.getPageSize(), filtered.size());
+        List<PlaylistResponse> pageContent = (from < filtered.size()) ? filtered.subList(from, to) : List.of();
+
+        int totalElements = filtered.size();
+        int totalPages = (int) Math.ceil((double) totalElements / pageable.getPageSize());
+        PageInfo pageInfo = PageInfo.toPageInfo(pageable.getPageNumber(), totalPages, totalElements);
+
+        return PageResponse.toPageResponse(pageInfo, pageContent);
+    }
+
 
     public TopTagPlaylistResponse getTopTagPlaylistWithMetadata(PlaylistCondition condition, Pageable pageable){
         //상위 태그 먼저 가져오기
         List<Tag> topTags = preferenceService.getTopTags(condition.getMemberId());
-        
+
         TopTagPlaylistResponse.CategoryInfo categoryInfo = null;
         TopTagPlaylistResponse.TagInfo tagInfo = null;
 
-    
-       if (condition.getIndex() != null && condition.getIndex() >= 0 && condition.getIndex() < topTags.size()) {
+
+        if (condition.getIndex() != null && condition.getIndex() >= 0 && condition.getIndex() < topTags.size()) {
             Tag targetTag = topTags.get(condition.getIndex());
 
             // 상위 태그 조립해줌
             condition.setTagId(targetTag.getId());
-            
+
             // TagInfo 객체 조립
             tagInfo = TopTagPlaylistResponse.TagInfo.builder()
                     .id(targetTag.getId())
@@ -152,10 +176,10 @@ public class PlaylistStrategyService {
 
 
         return TopTagPlaylistResponse.builder()
-                    .category(categoryInfo)
-                    .tag(tagInfo)
-                    .medias(mediaPage) // 위에서 가져온 PageResponse를 그대로 넣음
-                    .build();
+                .category(categoryInfo)
+                .tag(tagInfo)
+                .medias(mediaPage) // 위에서 가져온 PageResponse를 그대로 넣음
+                .build();
     }
 
 
@@ -167,7 +191,7 @@ public class PlaylistStrategyService {
         if (strategy == null) {
             strategy = strategyMap.get(ContentSource.RECOMMEND.name());
         }
-        
+
         // 여전히 null이라면 시스템 설정 오류이므로 S001 에러 발생
         if (strategy == null) {
             throw new BusinessException(ErrorCode.STRATEGY_NOT_FOUND);
@@ -196,7 +220,7 @@ public class PlaylistStrategyService {
 
         if (firstContentPage.isEmpty()) {
             // 시리즈 껍데기만 있고 콘텐츠가 아직 안 올라온 예외 상황 방어
-            return null; 
+            return null;
         }
         return firstContentPage.getContent().get(0).getMedia().getId();
     }

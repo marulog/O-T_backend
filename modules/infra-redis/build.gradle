@@ -1,0 +1,9 @@
+apply plugin: 'java-library'
+
+dependencies {
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+    api 'net.javacrumbs.shedlock:shedlock-spring:5.10.0'
+    api 'net.javacrumbs.shedlock:shedlock-provider-redis-spring:5.10.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+}
