@@ -7,6 +7,7 @@ import com.ott.api_admin.content.dto.response.ContentsUploadResponse;
 import com.ott.api_admin.content.mapper.BackOfficeContentsMapper;
 import com.ott.api_admin.content.vo.IngestJobResult;
 import com.ott.api_admin.tagging.event.AiTaggingRequestedEvent;
+import com.ott.api_admin.trending.event.TrendingCacheInvalidationEvent;
 import com.ott.api_admin.upload.support.MediaTagLinker;
 import com.ott.api_admin.upload.support.UploadHelper;
 import com.ott.common.web.exception.BusinessException;
@@ -202,6 +203,8 @@ public class BackOfficeContentsWriter {
 
         mediaTagRepository.deleteAllByMedia_Id(media.getId());
         mediaTagLinker.linkTags(media, request.categoryId(), request.tagIdList());
+
+        eventPublisher.publishEvent(new TrendingCacheInvalidationEvent()); // 이벤트 추가
 
         return backOfficeContentsMapper.toContentsUpdateResponse(
                 contentsId,
