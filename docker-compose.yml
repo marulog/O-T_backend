@@ -32,6 +32,7 @@ services:
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
 
       JWT_SECRET_BASE64: ${JWT_SECRET_BASE64}
 
@@ -52,8 +53,14 @@ services:
       AI_BASE_URL: ${AI_BASE_URL}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       JDK_JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST:-redis}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT:-6379}
+      SPRING_DATA_REDIS_PASSWORD: ${SPRING_DATA_REDIS_PASSWORD:-}
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
@@ -94,12 +101,18 @@ services:
       RABBITMQ_PORT: ${RABBITMQ_PORT}
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST:-redis}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT:-6379}
+      SPRING_DATA_REDIS_PASSWORD: ${SPRING_DATA_REDIS_PASSWORD:-}
     depends_on:
       mysql:
         condition: service_healthy
       api-user:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   # ============ Message Queue ============
@@ -117,6 +130,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+
+  # ============ Cache ============
+  redis:
+    image: redis:7-alpine
+    container_name: ott-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   # ============ Transcoder 워커 ============
   transcoder:
@@ -143,7 +171,7 @@ services:
 
       TRANSCODER_FFPROBE_ENGINE: ${TRANSCODER_FFPROBE_ENGINE}
       FFPROBE_PATH: ${FFPROBE_PATH}
-      
+
       TRANSCODER_TEMP_DIR: ${TRANSCODER_TEMP_DIR}
       TRANSCODER_SEGMENT_DURATION: ${TRANSCODER_SEGMENT_DURATION}
       STORAGE_PROVIDER: ${STORAGE_PROVIDER}
@@ -188,7 +216,7 @@ services:
     depends_on:
       - prometheus
 
-# ============ AI Server ============
+  # ============ AI Server ============
   machine:
     build:
       context: .
@@ -199,7 +227,7 @@ services:
     environment:
       - AI_TAGGING_MODEL_PATH=/app/models/tagging
       - AI_RECOMMEND_MODEL_PATH=/app/models/recommend
-      - AI_BASE_URL=${AI_BASE_URL:-http://machine:8000} 
+      - AI_BASE_URL=${AI_BASE_URL:-http://machine:8000}
       - TIMEOUT_MS=30000
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
@@ -210,3 +238,4 @@ volumes:
   mysql-data:
   prometheus-data:
   grafana-data:
+  redis-data:

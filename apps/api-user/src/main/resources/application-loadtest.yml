@@ -1,0 +1,12 @@
+decorator:
+  datasource:
+    enabled: true
+    p6spy:
+      enable-logging: true
+      logging: slf4j
+      multiline: true
+      log-format: "%(executionTime) ms | %(category) | connection %(connectionId) | %(sqlSingleLine)"
+
+logging:
+  level:
+    p6spy: info
