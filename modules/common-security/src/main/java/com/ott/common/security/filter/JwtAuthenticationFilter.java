@@ -2,7 +2,7 @@ package com.ott.common.security.filter;
 
 import com.ott.common.security.handler.JwtAuthenticationEntryPoint;
 import com.ott.common.security.jwt.JwtTokenProvider;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.ErrorCode;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;

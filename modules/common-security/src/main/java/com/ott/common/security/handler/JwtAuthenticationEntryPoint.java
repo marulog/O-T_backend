@@ -1,8 +1,7 @@
 package com.ott.common.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.exception.ErrorResponse;
+import com.ott.common.core.error.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +33,10 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         // Filter에서 받아온 002, 003 에러일 경우 해당 에러 사용
         Object attribute = request.getAttribute(ERROR_CODE);
         ErrorCode errorCode = (attribute instanceof ErrorCode) ? (ErrorCode) attribute : ErrorCode.UNAUTHORIZED;
-        ErrorResponse errorResponse = ErrorResponse.of(errorCode, authException.getMessage());
+        log.warn("JWT authentication failed: errorCode={}", errorCode.getCode());
+        SecurityErrorResponse errorResponse = SecurityErrorResponse.of(errorCode, errorCode.getMessage());
 
-        response.setStatus(errorCode.getStatus().value());
+        response.setStatus(SecurityHttpStatusMapper.toHttpStatus(errorCode));
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
