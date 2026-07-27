@@ -57,7 +57,7 @@ public class MemberMoodRefresh extends BaseEntity {
         this.recommendedMediaIds = recommendedMediaIds;
         this.isHidden = false; // 처음엔 무조건 보여야하므로 false 처리
     }
-    
+
     public void hideCard() {
         this.isHidden = true;
     }

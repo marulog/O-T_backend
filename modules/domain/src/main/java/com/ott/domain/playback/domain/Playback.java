@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Getter
 @Table(
-        name = "playback", 
+        name = "playback",
         uniqueConstraints  = {
             @UniqueConstraint(
                 name = "uk_playback_member_contents",
