@@ -1,6 +1,6 @@
 package com.ott.transcoder.heartbeat;
 
-import com.ott.domain.ingest_job.repository.IngestJobRepository;
+import com.ott.infra.db.ingest_job.repository.IngestJobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,14 +1,14 @@
 package com.ott.transcoder.job;
 
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.ingest_command.domain.CommandStatus;
 import com.ott.domain.ingest_command.domain.CommandType;
 import com.ott.domain.ingest_command.domain.IngestCommand;
-import com.ott.domain.ingest_command.repository.IngestCommandRepository;
+import com.ott.infra.db.ingest_command.repository.IngestCommandRepository;
 import com.ott.domain.ingest_job.domain.IngestJob;
 import com.ott.domain.ingest_job.domain.IngestStatus;
-import com.ott.domain.ingest_job.repository.IngestJobRepository;
+import com.ott.infra.db.ingest_job.repository.IngestJobRepository;
 import com.ott.domain.media.domain.Media;
 import com.ott.domain.media.domain.MediaStatus;
 import com.ott.infra.s3.service.S3PresignService;
@@ -24,8 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-import static com.ott.common.web.exception.ErrorCode.INGEST_COMMAND_NOT_FOUND;
-import static com.ott.common.web.exception.ErrorCode.INGEST_JOB_NOT_FOUND;
+import static com.ott.common.core.error.ErrorCode.INGEST_COMMAND_NOT_FOUND;
+import static com.ott.common.core.error.ErrorCode.INGEST_JOB_NOT_FOUND;
 
 /**
  * 트랜스코딩 체크포인트별 상태 전이 담당
