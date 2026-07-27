@@ -31,7 +31,7 @@ public interface PlayBackApi {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)) })
     })
         ResponseEntity<Void> upsertPlayBack(
-            @Parameter(hidden = true) @AuthenticationPrincipal Long memberId, 
-            @Valid @RequestBody PlaybackUpdateRequest request 
+            @Parameter(hidden = true) @AuthenticationPrincipal Long memberId,
+            @Valid @RequestBody PlaybackUpdateRequest request
     );
-} 
+}

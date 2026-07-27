@@ -14,19 +14,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ott.domain.common.Status;
-import com.ott.domain.likes.repository.LikesRepository;
-import com.ott.domain.media_tag.repository.MediaTagRepository;
-import com.ott.domain.playback.repository.PlaybackRepository;
-import com.ott.domain.preferred_tag.repository.PreferredTagRepository;
+import com.ott.infra.db.likes.repository.LikesRepository;
+import com.ott.infra.db.media_tag.repository.MediaTagRepository;
+import com.ott.infra.db.playback.repository.PlaybackRepository;
+import com.ott.infra.db.preferred_tag.repository.PreferredTagRepository;
 import com.ott.domain.tag.domain.Tag;
-import com.ott.domain.tag.repository.TagRepository;
+import com.ott.infra.db.tag.repository.TagRepository;
 
 import lombok.RequiredArgsConstructor;
 
 
 // 유저의 행동(선호태그, 시청 - 태그 , 선호 태그)를 수집하여
 // Top3 태그와 oo 님이 좋아하실만한 콘텐츠
-// 종합 점수표 계산 
+// 종합 점수표 계산
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -47,7 +47,7 @@ public class PlaylistPreferenceService {
 
         // 최근 100개까지만 가져옴
         Pageable limit100 = PageRequest.of(0, 100);
-        
+
 
         // 1. 온보딩 선호 태그 가중치 반영 (+5점)
         // Map.merge 를 통해 누적 점수 계산
@@ -78,19 +78,19 @@ public class PlaylistPreferenceService {
             Collections.shuffle(allTags);
             return allTags.stream().limit(3).collect(Collectors.toList());
         }
-        
+
         // 최종적으로 추출된 3개의 ID로 실제 Tag 엔티티들을 DB에서 가져와 반환
         // findAllById (In 절은 순서 보장 x 한번 더 TopTagIds 의 인덱스 순서에 맞게 정렬해주어야함)
         List<Tag> tags = new ArrayList<>(tagRepository.findAllById(topTagIds));
         tags.sort(Comparator.comparing(tag -> topTagIds.indexOf(tag.getId())));
 
         return tags;
-                
+
     }
 
 
     /**
-     * [RECOMMEND 전략용] 
+     * [RECOMMEND 전략용]
      * 선호 태그(+5) + 시청 이력(+3) + 좋아요(+2) -  종합 점수표 반환
      */
     public Map<Long, Integer> getTotalTagScores(Long memberId) {
@@ -100,7 +100,7 @@ public class PlaylistPreferenceService {
         // 1. 고정 취향: 온보딩 선호 태그 (+5점)
         preferredTagRepository.findTagIdsByMemberId(memberId, Status.ACTIVE)
                 .forEach(id -> totalScores.merge(id, 5, Integer::sum));
-        
+
         // 2. 최근 관심사: 최근 시청 이력 (+3점)
         List<Long> playedMediaIds = playbackRepository.findRecentPlayedMediaIds(memberId, Status.ACTIVE, limit100);
 

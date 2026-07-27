@@ -13,6 +13,7 @@ import com.ott.api_user.shortform.dto.response.ShortFormFeedResponse;
 import com.ott.api_user.shortform.service.ClickEventService;
 import com.ott.api_user.shortform.service.ShortFormFeedService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 import com.ott.domain.click_event.domain.ClickType;
 
@@ -34,7 +35,7 @@ public class ShortFormController implements ShortFormApi {
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size) {
 
-        PageResponse<ShortFormFeedResponse> response = shortFormFeedService.getShortFormFeed(memberId, page, size);
+        PageResponse<ShortFormFeedResponse> response = PageResponseMapper.from(shortFormFeedService.getShortFormFeed(memberId, page, size));
         return ResponseEntity.ok(SuccessResponse.of(response));
     }
 

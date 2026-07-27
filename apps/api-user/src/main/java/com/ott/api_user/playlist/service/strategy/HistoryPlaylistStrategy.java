@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import com.ott.api_user.playlist.dto.request.PlaylistCondition;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 
 //시청 이력 기반 플레이리스트 - playback (시청기록)을 토대로 중복 제거 후 최근날짜 순 리스트
 @Component("HISTORY")
@@ -16,11 +16,11 @@ public class HistoryPlaylistStrategy implements PlaylistStrategy {
 
     @Override
     public Page<Media> getPlaylist(PlaylistCondition condition, Pageable pageable) {
-        
+
         return mediaRepository.findHistoryPlaylists(
-            condition.getMemberId(), 
+            condition.getMemberId(),
             condition.getMediaType(),
-            condition.getExcludeMediaId(), 
+            condition.getExcludeMediaId(),
             pageable
         );
     }

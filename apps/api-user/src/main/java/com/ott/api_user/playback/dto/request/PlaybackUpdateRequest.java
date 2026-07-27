@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Schema(description = "이어보기 요청 DTO")
 public class PlaybackUpdateRequest {
-    
+
     @NotNull(message = "미디어 ID는 필수입니다.")
     @Schema(type = "Long", description = "미디어 ID", example = "101")
     private Long mediaId;

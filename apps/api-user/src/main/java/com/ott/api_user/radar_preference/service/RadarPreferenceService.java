@@ -3,18 +3,18 @@ package com.ott.api_user.radar_preference.service;
 import com.ott.api_user.radar_preference.dto.request.RadarPreferenceRequest;
 import com.ott.api_user.radar_preference.dto.response.RadarMediaResponse;
 import com.ott.api_user.radar_preference.dto.response.RadarPreferenceResponse;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.common.MediaType;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media_metrics.repository.MediaMetricsRepository;
+import com.ott.infra.db.media_metrics.repository.MediaMetricsRepository;
 import com.ott.domain.member_radar_preference.domain.MemberRadarPreference;
-import com.ott.domain.member_radar_preference.repository.MemberRadarPreferenceRepository;
+import com.ott.infra.db.member_radar_preference.repository.MemberRadarPreferenceRepository;
 import com.ott.domain.playback.domain.Playback;
-import com.ott.domain.playback.repository.PlaybackRepository;
+import com.ott.infra.db.playback.repository.PlaybackRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,7 +66,7 @@ public class RadarPreferenceService {
         );
     }
 
-    public PageResponse<RadarMediaResponse> getRecommendations(Long memberId, Long excludeMediaId) {
+    public PageResult<RadarMediaResponse> getRecommendations(Long memberId, Long excludeMediaId) {
         MemberRadarPreference memberRadarPreference = memberRadarPreferenceRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RADAR_PREFERENCE_NOT_FOUND));
 
@@ -77,7 +77,7 @@ public class RadarPreferenceService {
         int reWatch = memberRadarPreference.getReWatch();
 
         if (needDefaultWeight(popularity, immersion, mania, recency, reWatch)) {
-            return PageResponse.toPageResponse(PageInfo.toPageInfo(0, 0, 0), List.of());
+            return PageResult.of(PageMetadata.of(0, 0, 0), List.of());
         }
 
         List<Media> mediaList = mediaMetricsRepository.findTopByWeightedScore(
@@ -141,8 +141,8 @@ public class RadarPreferenceService {
                 })
                 .toList();
 
-        PageInfo pageInfo = PageInfo.toPageInfo(0, 1, contentList.size());
-        return PageResponse.toPageResponse(pageInfo, contentList);
+        PageMetadata pageMetadata = PageMetadata.of(0, 1, contentList.size());
+        return PageResult.of(pageMetadata, contentList);
     }
 
     boolean needDefaultWeight(int popularity, int immersion, int mania, int recency, int reWatch) {

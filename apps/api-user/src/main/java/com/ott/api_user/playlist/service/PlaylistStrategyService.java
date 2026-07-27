@@ -3,22 +3,22 @@ package com.ott.api_user.playlist.service;
 import com.ott.api_user.common.ContentSource;
 import com.ott.api_user.playlist.dto.request.PlaylistCondition;
 import com.ott.api_user.playlist.dto.response.PlaylistResponse;
-import com.ott.api_user.playlist.dto.response.TopTagPlaylistResponse;
+import com.ott.api_user.playlist.dto.response.TopTagPlaylistResult;
 import com.ott.api_user.playlist.service.strategy.PlaylistStrategy;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.media.domain.MediaStatus;
 import com.ott.domain.common.PublicStatus;
 import com.ott.domain.common.Status;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.playback.repository.PlaybackRepository;
+import com.ott.infra.db.playback.repository.PlaybackRepository;
 import com.ott.domain.tag.domain.Tag;
-import com.ott.domain.watch_history.repository.WatchHistoryRepository;
+import com.ott.infra.db.watch_history.repository.WatchHistoryRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -45,7 +45,7 @@ public class PlaylistStrategyService {
     private final PlaybackRepository playbackRepository;
     private final TrendingCacheService trendingCacheService;
 
-    public PageResponse<PlaylistResponse> getPlaylists(PlaylistCondition condition, Pageable pageable) {
+    public PageResult<PlaylistResponse> getPlaylists(PlaylistCondition condition, Pageable pageable) {
 
         if (condition.getContentSource() == null) {
             throw new BusinessException(ErrorCode.INVALID_PLAYLIST_SOURCE);
@@ -114,16 +114,16 @@ public class PlaylistStrategyService {
 
 
         // 4. PageInfo 생성
-        PageInfo pageInfo = PageInfo.toPageInfo(
+        PageMetadata pageMetadata = PageMetadata.of(
                 mediaPage.getNumber(),
                 mediaPage.getTotalPages(),
                 (int) mediaPage.getTotalElements()
         );
 
-        return PageResponse.toPageResponse(pageInfo, contentList);
+        return PageResult.of(pageMetadata, contentList);
     }
 
-    private PageResponse<PlaylistResponse> getTrendingFromCache(PlaylistCondition condition, Pageable pageable) {
+    private PageResult<PlaylistResponse> getTrendingFromCache(PlaylistCondition condition, Pageable pageable) {
         List<PlaylistResponse> all = trendingCacheService.getTrending().getItems();
 
         Long exclude = condition.getExcludeMediaId();
@@ -136,18 +136,18 @@ public class PlaylistStrategyService {
 
         int totalElements = filtered.size();
         int totalPages = (int) Math.ceil((double) totalElements / pageable.getPageSize());
-        PageInfo pageInfo = PageInfo.toPageInfo(pageable.getPageNumber(), totalPages, totalElements);
+        PageMetadata pageMetadata = PageMetadata.of(pageable.getPageNumber(), totalPages, totalElements);
 
-        return PageResponse.toPageResponse(pageInfo, pageContent);
+        return PageResult.of(pageMetadata, pageContent);
     }
 
 
-    public TopTagPlaylistResponse getTopTagPlaylistWithMetadata(PlaylistCondition condition, Pageable pageable){
+    public TopTagPlaylistResult getTopTagPlaylistWithMetadata(PlaylistCondition condition, Pageable pageable){
         //상위 태그 먼저 가져오기
         List<Tag> topTags = preferenceService.getTopTags(condition.getMemberId());
 
-        TopTagPlaylistResponse.CategoryInfo categoryInfo = null;
-        TopTagPlaylistResponse.TagInfo tagInfo = null;
+        TopTagPlaylistResult.CategoryInfo categoryInfo = null;
+        TopTagPlaylistResult.TagInfo tagInfo = null;
 
 
         if (condition.getIndex() != null && condition.getIndex() >= 0 && condition.getIndex() < topTags.size()) {
@@ -157,14 +157,14 @@ public class PlaylistStrategyService {
             condition.setTagId(targetTag.getId());
 
             // TagInfo 객체 조립
-            tagInfo = TopTagPlaylistResponse.TagInfo.builder()
+            tagInfo = TopTagPlaylistResult.TagInfo.builder()
                     .id(targetTag.getId())
                     .name(targetTag.getName())
                     .build();
 
             // CategoryInfo 객체 조립
             if (targetTag.getCategory() != null) {
-                categoryInfo = TopTagPlaylistResponse.CategoryInfo.builder()
+                categoryInfo = TopTagPlaylistResult.CategoryInfo.builder()
                         .id(targetTag.getCategory().getId())
                         .name(targetTag.getCategory().getName())
                         .build();
@@ -172,13 +172,13 @@ public class PlaylistStrategyService {
         }
 
         // 상위태그가 조립된 상태로 플레이리스트 조회
-        PageResponse<PlaylistResponse> mediaPage = getPlaylists(condition, pageable);
+        PageResult<PlaylistResponse> mediaPage = getPlaylists(condition, pageable);
 
 
-        return TopTagPlaylistResponse.builder()
+        return TopTagPlaylistResult.builder()
                 .category(categoryInfo)
                 .tag(tagInfo)
-                .medias(mediaPage) // 위에서 가져온 PageResponse를 그대로 넣음
+                .medias(mediaPage)
                 .build();
     }
 

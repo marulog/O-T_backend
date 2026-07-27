@@ -1,7 +1,7 @@
 package com.ott.api_user.playlist.dto.response;
 
 import com.ott.domain.common.MediaType;
-import com.ott.domain.watch_history.repository.RecentWatchProjection;
+import com.ott.infra.db.watch_history.repository.RecentWatchProjection;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

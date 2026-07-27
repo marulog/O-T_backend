@@ -2,20 +2,20 @@ package com.ott.api_user.bookmark.service;
 
 import com.ott.api_user.bookmark.dto.response.BookmarkMediaResponse;
 import com.ott.api_user.bookmark.dto.response.BookmarkShortFormResponse;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.bookmark.domain.Bookmark;
-import com.ott.domain.bookmark.repository.BookmarkMediaProjection;
-import com.ott.domain.bookmark.repository.BookmarkRepository;
+import com.ott.infra.db.bookmark.repository.BookmarkMediaProjection;
+import com.ott.infra.db.bookmark.repository.BookmarkRepository;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.common.Status;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 import com.ott.domain.member.domain.Member;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -83,7 +83,7 @@ public class BookmarkService {
         // 북마크 리스트 조회
         // 이미 DB상에는 시리즈 원본 / 시나리오 / 숏폼만 저장되어 있음
         @Transactional(readOnly = true)
-        public PageResponse<BookmarkMediaResponse> getBookmarkMediaList(Long memberId, Integer page, Integer size) {
+        public PageResult<BookmarkMediaResponse> getBookmarkMediaList(Long memberId, Integer page, Integer size) {
 
                 Pageable pageable = PageRequest.of(page, size);
 
@@ -96,17 +96,17 @@ public class BookmarkService {
                         .toList();
 
                 // pageInfo 생성
-                PageInfo pageInfo = PageInfo.toPageInfo(
+                PageMetadata pageMetadata = PageMetadata.of(
                                 bookmarkPage.getNumber(),
                                 bookmarkPage.getTotalPages(),
                                 bookmarkPage.getSize());
 
-                return PageResponse.toPageResponse(pageInfo, dataList);
+                return PageResult.of(pageMetadata, dataList);
         }
 
         // 숏폼 리스트 조회
         @Transactional(readOnly = true)
-        public PageResponse<BookmarkShortFormResponse> getBookmarkShortFormList(Long memberId, Integer page,
+        public PageResult<BookmarkShortFormResponse> getBookmarkShortFormList(Long memberId, Integer page,
                         Integer size) {
 
                 Pageable pageable = PageRequest.of(page, size);
@@ -125,12 +125,12 @@ public class BookmarkService {
                                 .toList();
 
                 // pageInfo 생성
-                PageInfo pageInfo = PageInfo.toPageInfo(
+                PageMetadata pageMetadata = PageMetadata.of(
                                 bookmarkPage.getNumber(),
                                 bookmarkPage.getTotalPages(),
                                 bookmarkPage.getSize());
 
-                return PageResponse.toPageResponse(pageInfo, dataList);
+                return PageResult.of(pageMetadata, dataList);
         }
 
         /**

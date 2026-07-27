@@ -1,7 +1,7 @@
 package com.ott.api_user.auth.client;
 
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

@@ -6,6 +6,7 @@ import com.ott.api_user.comment.dto.response.CommentResponse;
 import com.ott.api_user.comment.dto.response.ContentsCommentResponse;
 import com.ott.api_user.comment.dto.response.MyCommentResponse;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -63,7 +64,7 @@ public class CommentController implements CommentApi {
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "20") Integer size,
             @AuthenticationPrincipal Long memberId) {
-        return ResponseEntity.ok(SuccessResponse.of(commentService.getMyComments(memberId, page, size)));
+        return ResponseEntity.ok(SuccessResponse.of(PageResponseMapper.from(commentService.getMyComments(memberId, page, size))));
     }
 
     // 콘텐츠 상세 페이지의 댓글 목록 조회
@@ -75,9 +76,8 @@ public class CommentController implements CommentApi {
             @RequestParam(value = "includeSpoiler", defaultValue = "false") boolean includeSpoiler,
             @AuthenticationPrincipal Long memberId) {
         return ResponseEntity.ok(
-                SuccessResponse.of(commentService.getContentsCommentList(mediaId, memberId, pageParam,
-                        sizeParam, includeSpoiler)));
+                SuccessResponse.of(PageResponseMapper.from(commentService.getContentsCommentList(mediaId, memberId, pageParam,
+                        sizeParam, includeSpoiler))));
 
     }
 }
-

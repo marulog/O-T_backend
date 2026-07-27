@@ -25,7 +25,7 @@ public class MoodRefreshController implements MoodRefreshApi {
     @GetMapping("/active")
     public ResponseEntity<SuccessResponse<MoodRefreshResponse>> getActiveCard(
             @AuthenticationPrincipal Long memberId) {
-        
+
         MoodRefreshResponse response = moodRefreshService.getActiveRefreshCard(memberId);
         return ResponseEntity.ok(SuccessResponse.of(response));
     }
@@ -35,7 +35,7 @@ public class MoodRefreshController implements MoodRefreshApi {
     public ResponseEntity<Void> hideCard(
             @AuthenticationPrincipal Long memberId,
             @PathVariable("refreshId") Long refreshId) {
-        
+
         moodRefreshService.hideRefreshCard(memberId, refreshId);
         return ResponseEntity.noContent().build();
     }

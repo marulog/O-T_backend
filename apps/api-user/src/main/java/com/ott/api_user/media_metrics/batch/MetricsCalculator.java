@@ -1,8 +1,8 @@
 package com.ott.api_user.media_metrics.batch;
 
-import com.ott.domain.media_metrics.repository.MediaMetricsJdbcRepository;
-import com.ott.domain.media_metrics.repository.MediaMetricsProjection;
-import com.ott.domain.media_metrics.repository.MediaMetricsRow;
+import com.ott.infra.db.media_metrics.repository.MediaMetricsJdbcRepository;
+import com.ott.infra.db.media_metrics.repository.MediaMetricsProjection;
+import com.ott.infra.db.media_metrics.repository.MediaMetricsRow;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

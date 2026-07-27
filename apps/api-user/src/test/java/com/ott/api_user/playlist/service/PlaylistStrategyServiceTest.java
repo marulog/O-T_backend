@@ -13,26 +13,26 @@ import static org.mockito.Mockito.when;
 import com.ott.api_user.common.ContentSource;
 import com.ott.api_user.playlist.dto.request.PlaylistCondition;
 import com.ott.api_user.playlist.dto.response.PlaylistResponse;
-import com.ott.api_user.playlist.dto.response.TopTagPlaylistResponse;
+import com.ott.api_user.playlist.dto.response.TopTagPlaylistResult;
 import com.ott.api_user.playlist.service.strategy.PlaylistStrategy;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.category.domain.Category;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.common.PublicStatus;
 import com.ott.domain.common.Status;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
 import com.ott.domain.media.domain.MediaStatus;
 import com.ott.domain.member.domain.Member;
 import com.ott.domain.member.domain.Provider;
 import com.ott.domain.member.domain.Role;
 import com.ott.domain.playback.domain.Playback;
-import com.ott.domain.playback.repository.PlaybackRepository;
-import com.ott.domain.watch_history.repository.WatchHistoryRepository;
+import com.ott.infra.db.playback.repository.PlaybackRepository;
+import com.ott.infra.db.watch_history.repository.WatchHistoryRepository;
 import com.ott.domain.tag.domain.Tag;
 import java.util.Collections;
 import java.util.List;
@@ -109,7 +109,7 @@ class PlaylistStrategyServiceTest {
         when(playbackRepository.findAllByMemberIdAndMediaIds(condition.getMemberId(), List.of(20L)))
                 .thenReturn(List.of(createPlayback(playbackMember, targetContents, 123)));
 
-        PageResponse<PlaylistResponse> result = playlistStrategyService.getPlaylists(condition, pageable);
+        PageResult<PlaylistResponse> result = playlistStrategyService.getPlaylists(condition, pageable);
         PlaylistResponse response = result.getDataList().get(0);
 
         assertThat(response.getDuration()).isEqualTo(333);
@@ -119,19 +119,24 @@ class PlaylistStrategyServiceTest {
     @Test
     void getPlaylists_handlesSeriesWithoutAvailableContentGracefully() {
         PlaylistCondition condition = new PlaylistCondition();
-        condition.setContentSource(ContentSource.TRENDING);
+        condition.setContentSource(ContentSource.RECOMMEND);
         condition.setMemberId(7L);
 
         Pageable pageable = PageRequest.of(0, 1);
         Media seriesMedia = createMedia(11L, MediaType.SERIES);
-        when(strategyMap.get(ContentSource.TRENDING.name())).thenReturn(recommendStrategy);
+        when(strategyMap.get(ContentSource.RECOMMEND.name())).thenReturn(recommendStrategy);
         when(recommendStrategy.getPlaylist(condition, pageable)).thenReturn(new PageImpl<>(List.of(seriesMedia), pageable, 1));
         when(watchHistoryRepository.findLatestContentMediaIdByMemberIdAndSeriesMediaId(condition.getMemberId(), seriesMedia.getId()))
                 .thenReturn(Optional.empty());
-        when(contentsRepository.findBySeries_Media_IdAndStatusAndMedia_PublicStatusOrderByIdAsc(eq(seriesMedia.getId()), eq(Status.ACTIVE), eq(PublicStatus.PUBLIC), any(Pageable.class)))
+        when(contentsRepository.findBySeries_Media_IdAndStatusAndMedia_PublicStatusAndMedia_MediaStatusOrderByIdAsc(
+                eq(seriesMedia.getId()),
+                eq(Status.ACTIVE),
+                eq(PublicStatus.PUBLIC),
+                eq(MediaStatus.COMPLETED),
+                any(Pageable.class)))
                 .thenReturn(Page.empty());
 
-        PageResponse<PlaylistResponse> result = playlistStrategyService.getPlaylists(condition, pageable);
+        PageResult<PlaylistResponse> result = playlistStrategyService.getPlaylists(condition, pageable);
         PlaylistResponse response = result.getDataList().get(0);
 
         assertThat(response.getDuration()).isZero();
@@ -152,14 +157,14 @@ class PlaylistStrategyServiceTest {
 
         when(preferenceService.getTopTags(condition.getMemberId())).thenReturn(List.of(tag));
 
-        PageResponse<PlaylistResponse> fakePage = PageResponse.toPageResponse(
-                PageInfo.toPageInfo(0, 1, 1),
+        PageResult<PlaylistResponse> fakePage = PageResult.of(
+                PageMetadata.of(0, 1, 1),
                 Collections.emptyList()
         );
 
         doReturn(fakePage).when(playlistStrategyService).getPlaylists(condition, pageable);
 
-        TopTagPlaylistResponse response = playlistStrategyService.getTopTagPlaylistWithMetadata(condition, pageable);
+        TopTagPlaylistResult response = playlistStrategyService.getTopTagPlaylistWithMetadata(condition, pageable);
 
         assertThat(response.getTag()).isNotNull();
         assertThat(response.getTag().getId()).isEqualTo(tag.getId());

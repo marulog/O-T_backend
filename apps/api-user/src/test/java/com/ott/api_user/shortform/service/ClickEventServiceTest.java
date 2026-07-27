@@ -6,18 +6,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.ott.api_user.shortform.service.ClickEventService;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.click_event.domain.ClickEvent;
 import com.ott.domain.click_event.domain.ClickType;
 import com.ott.domain.member.domain.Member;
 import com.ott.domain.member.domain.Provider;
 import com.ott.domain.member.domain.Role;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 import com.ott.domain.short_form.domain.ShortForm;
 import com.ott.domain.short_form.domain.ShortForm.ShortFormBuilder;
-import com.ott.domain.short_form.repository.ShortFormRepository;
-import com.ott.domain.click_event.repository.ClickRepository;
+import com.ott.infra.db.short_form.repository.ShortFormRepository;
+import com.ott.infra.db.click_event.repository.ClickRepository;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class ClickEventServiceTest {
         ShortForm shortForm = ShortForm.builder().id(shortFormId).build();
 
         when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
-        when(shortFormRepository.findById(shortFormId)).thenReturn(Optional.of(shortForm));
+        when(shortFormRepository.findByMediaId(shortFormId)).thenReturn(Optional.of(shortForm));
 
         // 정상 흐름에서 이벤트가 저장되고 ClickType/Member/ShortForm이 일치하는지 확인
         clickEventService.saveClickEvent(memberId, shortFormId, ClickType.CTA_CLICK);
@@ -76,7 +76,7 @@ class ClickEventServiceTest {
     void saveClickEvent_throwsWhenShortFormMissing() {
         Member member = Member.builder().id(6L).email("u@ott").nickname("u").provider(Provider.KAKAO).role(Role.MEMBER).build();
         when(memberRepository.findById(6L)).thenReturn(Optional.of(member));
-        when(shortFormRepository.findById(99L)).thenReturn(Optional.empty());
+        when(shortFormRepository.findByMediaId(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> clickEventService.saveClickEvent(6L, 99L, ClickType.SHORT_CLICK))
                 .isInstanceOf(BusinessException.class)

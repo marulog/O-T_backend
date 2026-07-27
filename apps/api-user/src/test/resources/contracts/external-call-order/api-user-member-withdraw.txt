@@ -1,0 +1,10 @@
+api-user.member.withdraw -> memberRepository.findById
+api-user.member.withdraw -> kakaoUnlinkClient.unlink
+api-user.member.withdraw -> memberRepository.softDeleteByMemberId
+api-user.member.withdraw -> bookmarkRepository.softDeleteAllByMemberId
+api-user.member.withdraw -> likesRepository.softDeleteAllByMemberId
+api-user.member.withdraw -> preferredTagRepository.softDeleteAllByMemberId
+api-user.member.withdraw -> watchHistoryRepository.softDeleteAllByMemberId
+api-user.member.withdraw -> playbackRepository.softDeleteAllByMemberId
+api-user.member.withdraw -> commentRepository.softDeleteAllByMemberId
+api-user.member.withdraw -> memberRadarPreferenceRepository.softDeleteByMemberId

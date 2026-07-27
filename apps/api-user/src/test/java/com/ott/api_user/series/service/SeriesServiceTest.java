@@ -8,27 +8,27 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.ott.api_user.series.dto.SeriesContentsResponse;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.domain.bookmark.repository.BookmarkRepository;
-import com.ott.domain.category.repository.CategoryRepository;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.infra.db.bookmark.repository.BookmarkRepository;
+import com.ott.infra.db.category.repository.CategoryRepository;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.common.PublicStatus;
 import com.ott.domain.common.Status;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
 import com.ott.domain.media.domain.MediaStatus;
 import com.ott.domain.member.domain.Member;
 import com.ott.domain.member.domain.Provider;
 import com.ott.domain.member.domain.Role;
 import com.ott.domain.playback.domain.Playback;
-import com.ott.domain.playback.repository.PlaybackRepository;
+import com.ott.infra.db.playback.repository.PlaybackRepository;
 import com.ott.domain.series.domain.Series;
-import com.ott.domain.series.repository.SeriesRepository;
-import com.ott.domain.tag.repository.TagRepository;
-import com.ott.domain.watch_history.repository.WatchHistoryRepository;
-import com.ott.domain.likes.repository.LikesRepository;
+import com.ott.infra.db.series.repository.SeriesRepository;
+import com.ott.infra.db.tag.repository.TagRepository;
+import com.ott.infra.db.watch_history.repository.WatchHistoryRepository;
+import com.ott.infra.db.likes.repository.LikesRepository;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -88,7 +88,12 @@ class SeriesServiceTest {
 
         // Return a page that contains those episodes
         // 시리즈에 속한 콘텐츠만 필터링해서 반환되도록 콘텐츠 레포지토리 응답을 준비
-        when(contentsRepository.findBySeriesIdAndStatusAndMedia_PublicStatusOrderByIdAsc(series.getId(), Status.ACTIVE, PublicStatus.PUBLIC, pageable))
+        when(contentsRepository.findBySeriesIdAndStatusAndMedia_PublicStatusAndMedia_MediaStatusOrderByIdAsc(
+                series.getId(),
+                Status.ACTIVE,
+                PublicStatus.PUBLIC,
+                MediaStatus.COMPLETED,
+                pageable))
                 .thenReturn(new PageImpl<>(List.of(ep1, ep2), pageable, 2));
 
         // 재생 기록을 다운스트림으로 매핑하여 DTO에 positionSec이 채워지는지 확인
@@ -111,14 +116,24 @@ class SeriesServiceTest {
         assertThat(second.getPositionSec()).isEqualTo(60);
 
         // ContentsRepository에 Status/공개 상태 조건으로 호출되었는지 확인
-        verify(contentsRepository).findBySeriesIdAndStatusAndMedia_PublicStatusOrderByIdAsc(eq(series.getId()), eq(Status.ACTIVE), eq(PublicStatus.PUBLIC), any(Pageable.class));
+        verify(contentsRepository).findBySeriesIdAndStatusAndMedia_PublicStatusAndMedia_MediaStatusOrderByIdAsc(
+                eq(series.getId()),
+                eq(Status.ACTIVE),
+                eq(PublicStatus.PUBLIC),
+                eq(MediaStatus.COMPLETED),
+                any(Pageable.class));
     }
 
     @Test
     void getFirstEpisodeMediaId_throwsWhenNoEpisodesRegistered() {
         Long seriesId = 300L;
         Pageable limitOne = PageRequest.of(0, 1);
-        when(contentsRepository.findBySeriesIdAndStatusAndMedia_PublicStatusOrderByIdAsc(seriesId, Status.ACTIVE, PublicStatus.PUBLIC, limitOne))
+        when(contentsRepository.findBySeriesIdAndStatusAndMedia_PublicStatusAndMedia_MediaStatusOrderByIdAsc(
+                seriesId,
+                Status.ACTIVE,
+                PublicStatus.PUBLIC,
+                MediaStatus.COMPLETED,
+                limitOne))
                 .thenReturn(Page.empty(limitOne));
 
         // 1화가 없을 때 private helper가 EPISODE_NOT_REGISTERED 예외를 던지는지 검사
@@ -132,7 +147,12 @@ class SeriesServiceTest {
         Long seriesId = 400L;
         Pageable limitOne = PageRequest.of(0, 1);
         Contents episode = createContents(401L, createSeries(seriesId + 1, 10L), 180);
-        when(contentsRepository.findBySeriesIdAndStatusAndMedia_PublicStatusOrderByIdAsc(seriesId, Status.ACTIVE, PublicStatus.PUBLIC, limitOne))
+        when(contentsRepository.findBySeriesIdAndStatusAndMedia_PublicStatusAndMedia_MediaStatusOrderByIdAsc(
+                seriesId,
+                Status.ACTIVE,
+                PublicStatus.PUBLIC,
+                MediaStatus.COMPLETED,
+                limitOne))
                 .thenReturn(new PageImpl<>(List.of(episode), limitOne, 1));
 
         // 1화가 존재하면 실제 mediaId를 반환하는지 확인

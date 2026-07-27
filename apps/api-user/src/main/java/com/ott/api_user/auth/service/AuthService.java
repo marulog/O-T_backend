@@ -2,10 +2,10 @@ package com.ott.api_user.auth.service;
 
 import com.ott.api_user.auth.dto.TokenResponse;
 import com.ott.common.security.jwt.JwtTokenProvider;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.member.domain.Member;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,6 +69,14 @@ public class AuthService {
     public void logout(Long memberId) {
         Member member = findMemberById(memberId);
         member.clearRefreshToken();
+    }
+
+    public String issueTestAccessToken(Long memberId) {
+        Member member = findMemberById(memberId);
+        return jwtTokenProvider.createAccessToken(
+                member.getId(),
+                List.of(member.getRole().getKey())
+        );
     }
 
     // Optipnal 처리를 위해 사용

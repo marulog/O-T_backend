@@ -2,6 +2,7 @@ package com.ott.api_user.bookmark.controller;
 
 import com.ott.api_user.bookmark.dto.response.BookmarkMediaResponse;
 import com.ott.api_user.bookmark.dto.response.BookmarkShortFormResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.PageResponse;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -47,7 +48,7 @@ public class BookmarkController implements BookmarkAPI  {
             @AuthenticationPrincipal Long memberId) {
 
         return ResponseEntity.ok(SuccessResponse.of(
-                bookmarkService.getBookmarkMediaList(memberId, page, size)));
+                PageResponseMapper.from(bookmarkService.getBookmarkMediaList(memberId, page, size))));
     }
 
     // 북마크한 숏폼 리스트 조회
@@ -58,6 +59,6 @@ public class BookmarkController implements BookmarkAPI  {
             @AuthenticationPrincipal Long memberId) {
 
         return ResponseEntity.ok(SuccessResponse.of(
-                bookmarkService.getBookmarkShortFormList(memberId, page, size)));
+                PageResponseMapper.from(bookmarkService.getBookmarkShortFormList(memberId, page, size))));
     }
 }

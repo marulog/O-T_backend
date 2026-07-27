@@ -5,6 +5,7 @@ import com.ott.api_user.radar_preference.dto.response.RadarMediaResponse;
 import com.ott.api_user.radar_preference.dto.response.RadarPreferenceResponse;
 import com.ott.api_user.radar_preference.service.RadarPreferenceService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +47,7 @@ public class RadarPreferenceController implements RadarPreferenceApi {
             @AuthenticationPrincipal Long memberId
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(radarPreferenceService.getRecommendations(memberId, excludeMediaId))
+                SuccessResponse.of(PageResponseMapper.from(radarPreferenceService.getRecommendations(memberId, excludeMediaId)))
         );
     }
 }

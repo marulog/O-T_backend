@@ -1,7 +1,7 @@
 package com.ott.api_user.media_metrics.batch;
 
-import com.ott.domain.media_metrics.repository.MediaMetricsJdbcRepository;
-import com.ott.domain.media_metrics.repository.MediaMetricsRow;
+import com.ott.infra.db.media_metrics.repository.MediaMetricsJdbcRepository;
+import com.ott.infra.db.media_metrics.repository.MediaMetricsRow;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

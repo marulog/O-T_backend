@@ -66,7 +66,7 @@ public class ContentsDetailResponse {
 
         return ContentsDetailResponse.builder()
                 .mediaId(contents.getMedia().getId())
-                .seriesMediaId(seriesMediaId) 
+                .seriesMediaId(seriesMediaId)
                 .title(contents.getMedia().getTitle())
                 .description(contents.getMedia().getDescription())
                 .actors(contents.getActors())

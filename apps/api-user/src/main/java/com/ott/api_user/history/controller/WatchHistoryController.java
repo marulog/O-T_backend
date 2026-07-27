@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ott.api_user.history.dto.request.WatchHistoryRequest;
 import com.ott.api_user.history.service.WatchHistoryService;
-import com.ott.common.web.response.SuccessResponse;
-import com.ott.domain.watch_history.repository.WatchHistoryRepository;
 
 
 import jakarta.validation.Valid;
@@ -20,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/watch-history")
 public class WatchHistoryController implements WatchHistoryApi{
-    
+
     private final WatchHistoryService watchHistoryService;
 
     @Override
@@ -28,9 +26,8 @@ public class WatchHistoryController implements WatchHistoryApi{
     public ResponseEntity<Void> upsertWatchHistory(
         @AuthenticationPrincipal Long memberId,
         @Valid @RequestBody WatchHistoryRequest request){
-            
+
             watchHistoryService.upsertWatchHistory(memberId, request.getMediaId());
                 return ResponseEntity.noContent().build(); // 204 No Content
         }
 }
-

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ott.api_user.search.dto.SearchItemResponse;
 import com.ott.api_user.search.service.SearchService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +26,7 @@ public class SearchController implements SearchApi {
            @RequestParam (value = "searchWord") String searchWord,
            @RequestParam (value = "page", defaultValue = "0") Integer page,
            @RequestParam (value = "size", defaultValue = "24") Integer size) {
-       PageResponse<SearchItemResponse> response = searchService.search(searchWord, page, size);
+       PageResponse<SearchItemResponse> response = PageResponseMapper.from(searchService.search(searchWord, page, size));
        return ResponseEntity.ok(SuccessResponse.of(response));
    }
 

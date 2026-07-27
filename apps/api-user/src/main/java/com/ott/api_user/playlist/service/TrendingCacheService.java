@@ -2,9 +2,9 @@ package com.ott.api_user.playlist.service;
 
 import com.ott.api_user.playlist.dto.response.PlaylistResponse;
 import com.ott.api_user.playlist.dto.response.TrendingCache;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 import lombok.RequiredArgsConstructor;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.cache.annotation.CacheEvict;

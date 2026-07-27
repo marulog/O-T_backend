@@ -1,6 +1,6 @@
 package com.ott.api_user.bookmark.dto.response;
 
-import com.ott.domain.bookmark.repository.BookmarkMediaProjection;
+import com.ott.infra.db.bookmark.repository.BookmarkMediaProjection;
 import com.ott.domain.common.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

@@ -9,9 +9,11 @@ import org.springframework.validation.annotation.Validated;
 import com.ott.api_user.common.ContentSource;
 import com.ott.api_user.playlist.dto.request.PlaylistCondition;
 import com.ott.api_user.playlist.dto.response.PlaylistResponse;
+import com.ott.api_user.playlist.dto.response.TopTagPlaylistResult;
 import com.ott.api_user.playlist.dto.response.TopTagPlaylistResponse;
 import com.ott.api_user.playlist.service.PlaylistStrategyService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -60,8 +62,9 @@ public class PlaylistController implements PlayListAPI {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        return ResponseEntity.ok(SuccessResponse.of(playlistStrategytService.getTopTagPlaylistWithMetadata(condition, pageable)));
-        
+        return ResponseEntity.ok(SuccessResponse.of(toTopTagResponse(
+                playlistStrategytService.getTopTagPlaylistWithMetadata(condition, pageable))));
+
     }
 
     // 3. 특정 태그 단건 리스트
@@ -177,7 +180,26 @@ public class PlaylistController implements PlayListAPI {
 
         Pageable pageable = PageRequest.of(pageParam, sizeParam);
 
-        return ResponseEntity.ok(SuccessResponse.of(playlistStrategytService.getPlaylists(condition, pageable)));
+        return ResponseEntity.ok(SuccessResponse.of(PageResponseMapper.from(playlistStrategytService.getPlaylists(condition, pageable))));
+    }
+
+    private TopTagPlaylistResponse toTopTagResponse(TopTagPlaylistResult result) {
+        TopTagPlaylistResponse.CategoryInfo category = result.getCategory() == null ? null :
+                TopTagPlaylistResponse.CategoryInfo.builder()
+                        .id(result.getCategory().getId())
+                        .name(result.getCategory().getName())
+                        .build();
+
+        TopTagPlaylistResponse.TagInfo tag = result.getTag() == null ? null :
+                TopTagPlaylistResponse.TagInfo.builder()
+                        .id(result.getTag().getId())
+                        .name(result.getTag().getName())
+                        .build();
+
+        return TopTagPlaylistResponse.builder()
+                .category(category)
+                .tag(tag)
+                .medias(PageResponseMapper.from(result.getMedias()))
+                .build();
     }
 }
-

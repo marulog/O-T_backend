@@ -36,8 +36,8 @@ public class MoodRefreshResponse {
             String[] parts = rawSubtitle.split("\\|");
             parsedSubtitle = parts[0]; // 앞부분은 추천 멘트
             if (parts.length > 1) {
-                // 뒷부분(해시태그) 은 쉼표로 분리하여 리스트로 변환 
-                parsedTags = List.of(parts[1].split(",")); 
+                // 뒷부분(해시태그) 은 쉼표로 분리하여 리스트로 변환
+                parsedTags = List.of(parts[1].split(","));
             }
         }
 

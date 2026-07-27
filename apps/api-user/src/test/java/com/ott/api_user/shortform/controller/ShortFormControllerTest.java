@@ -15,8 +15,8 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import com.ott.api_user.shortform.dto.response.ShortFormFeedResponse;
 import com.ott.api_user.shortform.service.ClickEventService;
 import com.ott.api_user.shortform.service.ShortFormFeedService;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,8 +76,10 @@ class ShortFormControllerTest {
                 .mediaType(null)
                 .build();
 
-        PageInfo pageInfo = PageInfo.builder().currentPage(1).pageSize(3).build();
-        PageResponse<ShortFormFeedResponse> response = PageResponse.toPageResponse(pageInfo, List.of(payload));
+        PageResult<ShortFormFeedResponse> response = PageResult.of(
+                PageMetadata.of(1, 0, 3),
+                List.of(payload)
+        );
 
         when(shortFormFeedService.getShortFormFeed(memberId, 1, 3)).thenReturn(response);
 
@@ -99,7 +101,7 @@ class ShortFormControllerTest {
         mockMvc.perform(post("/short-forms/events")
                         .principal(new UsernamePasswordAuthenticationToken(memberId, "x"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"shortFormId\":7}"))
+                        .content("{\"mediaId\":7}"))
                 .andExpect(status().isNoContent());
 
         verify(clickEventService).saveClickEvent(eq(memberId), eq(7L), eq(com.ott.domain.click_event.domain.ClickType.SHORT_CLICK));
@@ -112,7 +114,7 @@ class ShortFormControllerTest {
         mockMvc.perform(post("/short-forms/cta")
                         .principal(new UsernamePasswordAuthenticationToken(memberId, "x"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"shortFormId\":13}"))
+                        .content("{\"mediaId\":13}"))
                 .andExpect(status().isNoContent());
 
         verify(clickEventService).saveClickEvent(memberId, 13L, com.ott.domain.click_event.domain.ClickType.CTA_CLICK);

@@ -1,14 +1,14 @@
 package com.ott.api_user.auth.service;
 
 import com.ott.api_user.auth.oauth2.userinfo.KakaoUserInfo;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.common.Status;
 import com.ott.domain.member.domain.Member;
 import com.ott.domain.member.domain.Provider;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 import com.ott.domain.member_radar_preference.domain.MemberRadarPreference;
-import com.ott.domain.member_radar_preference.repository.MemberRadarPreferenceRepository;
+import com.ott.infra.db.member_radar_preference.repository.MemberRadarPreferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
