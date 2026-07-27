@@ -11,19 +11,19 @@ import com.ott.api_admin.series.mapper.BackOfficeSeriesMapper;
 import com.ott.api_admin.trending.event.TrendingCacheInvalidationEvent;
 import com.ott.api_admin.upload.support.MediaTagLinker;
 import com.ott.api_admin.upload.support.UploadHelper;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.media.domain.Media;
 import com.ott.domain.media.domain.MediaStatus;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 import com.ott.domain.media_tag.domain.MediaTag;
-import com.ott.domain.media_tag.repository.MediaTagRepository;
+import com.ott.infra.db.media_tag.repository.MediaTagRepository;
 import com.ott.domain.member.domain.Member;
 import com.ott.domain.series.domain.Series;
-import com.ott.domain.series.repository.SeriesRepository;
+import com.ott.infra.db.series.repository.SeriesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -51,7 +51,7 @@ public class BackOfficeSeriesService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
-    public PageResponse<SeriesListResponse> getSeries(int page, int size, String searchWord) {
+    public PageResult<SeriesListResponse> getSeries(int page, int size, String searchWord) {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Media> mediaPage = mediaRepository.findMediaListByMediaTypeAndSearchWord(pageable, MediaType.SERIES, searchWord);
@@ -72,16 +72,16 @@ public class BackOfficeSeriesService {
                 ))
                 .toList();
 
-        PageInfo pageInfo = PageInfo.toPageInfo(
+        PageMetadata pageMetadata = PageMetadata.of(
                 mediaPage.getNumber(),
                 mediaPage.getTotalPages(),
                 mediaPage.getSize()
         );
-        return PageResponse.toPageResponse(pageInfo, responseList);
+        return PageResult.of(pageMetadata, responseList);
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<SeriesTitleListResponse> getSeriesTitle(Integer page, Integer size, String searchWord) {
+    public PageResult<SeriesTitleListResponse> getSeriesTitle(Integer page, Integer size, String searchWord) {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Series> seriesPage = seriesRepository.findSeriesListWithMediaBySearchWord(pageable, searchWord);
@@ -102,12 +102,12 @@ public class BackOfficeSeriesService {
                 ))
                 .toList();
 
-        PageInfo pageInfo = PageInfo.toPageInfo(
+        PageMetadata pageMetadata = PageMetadata.of(
                 seriesPage.getNumber(),
                 seriesPage.getTotalPages(),
                 seriesPage.getSize()
         );
-        return PageResponse.toPageResponse(pageInfo, responseList);
+        return PageResult.of(pageMetadata, responseList);
     }
 
     @Transactional(readOnly = true)

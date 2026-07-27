@@ -1,7 +1,7 @@
 package com.ott.api_admin.tagging.service;
 
 import com.ott.domain.media_mood_tag.domain.MediaMoodTag;
-import com.ott.domain.media_mood_tag.repository.MediaMoodTagRepository;
+import com.ott.infra.db.media_mood_tag.repository.MediaMoodTagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

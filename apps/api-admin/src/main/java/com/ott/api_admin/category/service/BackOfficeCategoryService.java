@@ -2,7 +2,7 @@ package com.ott.api_admin.category.service;
 
 import com.ott.api_admin.category.dto.response.CategoryListResponse;
 import com.ott.api_admin.category.mapper.BackOfficeCategoryMapper;
-import com.ott.domain.category.repository.CategoryRepository;
+import com.ott.infra.db.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import com.ott.api_admin.click_event.dto.response.ShortFormConversionResponse;
 import com.ott.api_admin.click_event.mapper.BackOfficeClickEventMapper;
 import com.ott.domain.click_event.domain.ClickType;
-import com.ott.domain.click_event.repository.ClickRepository;
+import com.ott.infra.db.click_event.repository.ClickRepository;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -5,18 +5,18 @@ import com.ott.api_admin.content.dto.response.ContentsListResponse;
 import com.ott.api_admin.content.mapper.BackOfficeContentsMapper;
 import com.ott.api_admin.upload.dto.response.MultipartUploadPartUrlResponse;
 import com.ott.api_admin.upload.support.UploadHelper;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.common.PublicStatus;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 import com.ott.domain.media_tag.domain.MediaTag;
-import com.ott.domain.media_tag.repository.MediaTagRepository;
+import com.ott.infra.db.media_tag.repository.MediaTagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,7 +37,7 @@ public class BackOfficeContentsReader {
     private final UploadHelper uploadHelper;
 
     @Transactional(readOnly = true)
-    public PageResponse<ContentsListResponse> getContents(int page, int size, String searchWord, PublicStatus publicStatus) {
+    public PageResult<ContentsListResponse> getContents(int page, int size, String searchWord, PublicStatus publicStatus) {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Media> mediaPage = mediaRepository.findMediaListByMediaTypeAndSearchWordAndPublicStatus(
@@ -51,12 +51,12 @@ public class BackOfficeContentsReader {
                 .map(backOfficeContentsMapper::toContentsListResponse)
                 .toList();
 
-        PageInfo pageInfo = PageInfo.toPageInfo(
+        PageMetadata pageMetadata = PageMetadata.of(
                 mediaPage.getNumber(),
                 mediaPage.getTotalPages(),
                 mediaPage.getSize()
         );
-        return PageResponse.toPageResponse(pageInfo, responseList);
+        return PageResult.of(pageMetadata, responseList);
     }
 
     @Transactional(readOnly = true)
@@ -99,7 +99,7 @@ public class BackOfficeContentsReader {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<MultipartUploadPartUrlResponse> getContentsOriginUploadPartUrls(
+    public PageResult<MultipartUploadPartUrlResponse> getContentsOriginUploadPartUrls(
             Long contentsId, String objectKey, String uploadId, Integer page, Integer size) {
         Contents contents = contentsRepository.findById(contentsId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CONTENTS_NOT_FOUND));
@@ -111,7 +111,7 @@ public class BackOfficeContentsReader {
         );
 
         int totalPartCount = uploadHelper.getMultipartPartCount(contents.getVideoSize());
-        PageResponse<UploadHelper.MultipartUploadPartUrl> partUrlPage = uploadHelper.getMultipartPartUrls(
+        var partUrlPage = uploadHelper.getMultipartPartUrls(
                 objectKey, uploadId, totalPartCount, page, size
         );
 
@@ -119,6 +119,6 @@ public class BackOfficeContentsReader {
                 .map(part -> new MultipartUploadPartUrlResponse(part.partNumber(), part.uploadUrl()))
                 .toList();
 
-        return PageResponse.toPageResponse(partUrlPage.getPageInfo(), dataList);
+        return PageResult.of(partUrlPage.getPageMetadata(), dataList);
     }
 }

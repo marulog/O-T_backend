@@ -1,8 +1,10 @@
 package com.ott.api_admin.ingest_job.controller;
 
+import com.ott.api_admin.common.application.AdminActorMapper;
 import com.ott.api_admin.ingest_job.dto.response.IngestJobListResponse;
 import com.ott.api_admin.ingest_job.service.BackOfficeIngestJobService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +30,12 @@ public class BackOfficeIngestJobController implements BackOfficeIngestJobApi {
             Authentication authentication
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(backOfficeIngestJobService.getIngestJobList(page, size, searchWord, authentication))
+                SuccessResponse.of(PageResponseMapper.from(backOfficeIngestJobService.getIngestJobList(
+                        page,
+                        size,
+                        searchWord,
+                        AdminActorMapper.from(authentication)
+                )))
         );
     }
 }

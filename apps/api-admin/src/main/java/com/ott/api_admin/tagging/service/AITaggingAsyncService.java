@@ -2,14 +2,14 @@ package com.ott.api_admin.tagging.service;
 
 import com.ott.api_admin.ai.client.AiClient;
 import com.ott.api_admin.tagging.event.AiTaggingRequestedEvent;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.common.Status;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 import com.ott.domain.media_mood_tag.domain.MediaMoodTag;
 import com.ott.domain.mood_tag.domain.MoodTag;
-import com.ott.domain.mood_tag.repository.MoodTagRepository;
+import com.ott.infra.db.mood_tag.repository.MoodTagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

@@ -1,33 +1,33 @@
 package com.ott.api_admin.shortform.service;
 
+import com.ott.api_admin.common.application.AdminActor;
 import com.ott.api_admin.shortform.dto.response.OriginMediaTitleListResponse;
 import com.ott.api_admin.shortform.dto.response.ShortFormDetailResponse;
 import com.ott.api_admin.shortform.dto.response.ShortFormListResponse;
 import com.ott.api_admin.shortform.mapper.BackOfficeShortFormMapper;
 import com.ott.api_admin.upload.dto.response.MultipartUploadPartUrlResponse;
 import com.ott.api_admin.upload.support.UploadHelper;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.common.PublicStatus;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 import com.ott.domain.media_tag.domain.MediaTag;
-import com.ott.domain.media_tag.repository.MediaTagRepository;
+import com.ott.infra.db.media_tag.repository.MediaTagRepository;
 import com.ott.domain.member.domain.Role;
 import com.ott.domain.series.domain.Series;
-import com.ott.domain.series.repository.SeriesRepository;
+import com.ott.infra.db.series.repository.SeriesRepository;
 import com.ott.domain.short_form.domain.ShortForm;
-import com.ott.domain.short_form.repository.ShortFormRepository;
+import com.ott.infra.db.short_form.repository.ShortFormRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,14 +49,13 @@ public class BackOfficeShortFormReader {
     private final UploadHelper uploadHelper;
 
     @Transactional(readOnly = true)
-    public PageResponse<ShortFormListResponse> getShortFormList(
+    public PageResult<ShortFormListResponse> getShortFormList(
             Integer page, Integer size, String searchWord, PublicStatus publicStatus,
-            Authentication authentication) {
+            AdminActor actor) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Long memberId = (Long) authentication.getPrincipal();
-        boolean isEditor = authentication.getAuthorities().stream()
-                .anyMatch(authority -> Role.EDITOR.getKey().equals(authority.getAuthority()));
+        Long memberId = actor.memberId();
+        boolean isEditor = actor.roleKeys().contains(Role.EDITOR.getKey());
         Long uploaderId = null;
 
         if (isEditor) {
@@ -71,16 +70,16 @@ public class BackOfficeShortFormReader {
                 .map(backOfficeShortFormMapper::toShortFormListResponse)
                 .toList();
 
-        PageInfo pageInfo = PageInfo.toPageInfo(
+        PageMetadata pageMetadata = PageMetadata.of(
                 mediaPage.getNumber(),
                 mediaPage.getTotalPages(),
                 mediaPage.getSize());
 
-        return PageResponse.toPageResponse(pageInfo, responseList);
+        return PageResult.of(pageMetadata, responseList);
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<OriginMediaTitleListResponse> getOriginMediaTitle(Integer page, Integer size, String searchWord) {
+    public PageResult<OriginMediaTitleListResponse> getOriginMediaTitle(Integer page, Integer size, String searchWord) {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Media> mediaPage = mediaRepository.findOriginMediaListBySearchWord(pageable, searchWord);
@@ -109,22 +108,21 @@ public class BackOfficeShortFormReader {
                         contentsIdByMediaId))
                 .toList();
 
-        PageInfo pageInfo = PageInfo.toPageInfo(
+        PageMetadata pageMetadata = PageMetadata.of(
                 mediaPage.getNumber(),
                 mediaPage.getTotalPages(),
                 mediaPage.getSize());
 
-        return PageResponse.toPageResponse(pageInfo, responseList);
+        return PageResult.of(pageMetadata, responseList);
     }
 
     @Transactional(readOnly = true)
-    public ShortFormDetailResponse getShortFormDetail(Long mediaId, Authentication authentication) {
+    public ShortFormDetailResponse getShortFormDetail(Long mediaId, AdminActor actor) {
         ShortForm shortForm = shortFormRepository.findWithMediaAndUploaderByMediaId(mediaId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SHORT_FORM_NOT_FOUND));
 
-        Long memberId = (Long) authentication.getPrincipal();
-        boolean isEditor = authentication.getAuthorities().stream()
-                .anyMatch(authority -> Role.EDITOR.getKey().equals(authority.getAuthority()));
+        Long memberId = actor.memberId();
+        boolean isEditor = actor.roleKeys().contains(Role.EDITOR.getKey());
 
         Media media = shortForm.getMedia();
         if (isEditor && !media.getUploader().getId().equals(memberId)) {
@@ -162,14 +160,13 @@ public class BackOfficeShortFormReader {
     }
 
     @Transactional(readOnly = true)
-    public int getShortFormUploadInfo(Long shortFormId, String objectKey, Authentication authentication) {
+    public int getShortFormUploadInfo(Long shortFormId, String objectKey, AdminActor actor) {
         ShortForm shortForm = shortFormRepository.findWithMediaAndUploaderByShortFormId(shortFormId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SHORT_FORM_NOT_FOUND));
 
         Media media = shortForm.getMedia();
-        Long memberId = (Long) authentication.getPrincipal();
-        boolean isEditor = authentication.getAuthorities().stream()
-                .anyMatch(authority -> Role.EDITOR.getKey().equals(authority.getAuthority()));
+        Long memberId = actor.memberId();
+        boolean isEditor = actor.roleKeys().contains(Role.EDITOR.getKey());
         if (isEditor && !media.getUploader().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
@@ -184,16 +181,15 @@ public class BackOfficeShortFormReader {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<MultipartUploadPartUrlResponse> getShortFormOriginUploadPartUrls(
+    public PageResult<MultipartUploadPartUrlResponse> getShortFormOriginUploadPartUrls(
             Long shortFormId, String objectKey, String uploadId,
-            Integer page, Integer size, Authentication authentication) {
+            Integer page, Integer size, AdminActor actor) {
         ShortForm shortForm = shortFormRepository.findWithMediaAndUploaderByShortFormId(shortFormId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SHORT_FORM_NOT_FOUND));
 
         Media media = shortForm.getMedia();
-        Long memberId = (Long) authentication.getPrincipal();
-        boolean isEditor = authentication.getAuthorities().stream()
-                .anyMatch(authority -> Role.EDITOR.getKey().equals(authority.getAuthority()));
+        Long memberId = actor.memberId();
+        boolean isEditor = actor.roleKeys().contains(Role.EDITOR.getKey());
         if (isEditor && !media.getUploader().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
@@ -205,7 +201,7 @@ public class BackOfficeShortFormReader {
         );
 
         int totalPartCount = uploadHelper.getMultipartPartCount(shortForm.getVideoSize());
-        PageResponse<UploadHelper.MultipartUploadPartUrl> partUrlPage = uploadHelper.getMultipartPartUrls(
+        var partUrlPage = uploadHelper.getMultipartPartUrls(
                 objectKey, uploadId, totalPartCount, page, size
         );
 
@@ -213,6 +209,6 @@ public class BackOfficeShortFormReader {
                 .map(part -> new MultipartUploadPartUrlResponse(part.partNumber(), part.uploadUrl()))
                 .toList();
 
-        return PageResponse.toPageResponse(partUrlPage.getPageInfo(), dataList);
+        return PageResult.of(partUrlPage.getPageMetadata(), dataList);
     }
 }

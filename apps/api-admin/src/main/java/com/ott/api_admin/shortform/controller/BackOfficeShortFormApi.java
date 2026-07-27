@@ -24,7 +24,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -112,7 +111,7 @@ public interface BackOfficeShortFormApi {
             @Valid @RequestBody ShortFormUploadRequest request,
 
             @Parameter(hidden = true)
-            @AuthenticationPrincipal Long memberId
+            Authentication authentication
     );
 
     @Operation(summary = "숏폼 수정", description = "숏폼 메타데이터를 수정하고 필요 시 파일 교체용 Presigned URL을 발급합니다.")

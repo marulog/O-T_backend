@@ -24,7 +24,7 @@ public interface AdminAuthApi {
             summary = "관리자 로그인",
             description = """
                     이메일/비밀번호로 관리자 로그인을 수행합니다.
-                    
+
                     - ADMIN or EDITOR 권한을 가진 계정만 로그인이 가능합니다.
                     - 응답 Body에는 memberId와 role만 포함됩니다.
                     """
@@ -59,7 +59,7 @@ public interface AdminAuthApi {
             summary = "토큰 재발급",
             description = """
                     쿠키의 refreshToken을 검증하여 Access Token과 Refresh Token을 재발급합니다.
-                    
+
                     - 요청 시 refreshToken 쿠키가 반드시 포함되어야 합니다.
                     - 보안을 위해 Access Token과 Refresh Token을 모두 재발급합니다. (Refresh Token Rotation)
                     - 재발급된 토큰은 기존 쿠키를 덮어씁니다.
@@ -80,7 +80,7 @@ public interface AdminAuthApi {
             summary = "로그아웃",
             description = """
                     로그인된 관리자를 로그아웃 처리합니다.
-                    
+
                     - DB에 저장된 refreshToken을 삭제합니다.
                     - accessToken, refreshToken 쿠키를 즉시 만료시킵니다.
                     - 이후 해당 토큰으로는 인증이 불가능합니다.

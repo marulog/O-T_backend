@@ -4,31 +4,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.ott.api_admin.common.application.AdminActor;
 import com.ott.api_admin.shortform.mapper.BackOfficeShortFormMapper;
 import com.ott.api_admin.upload.support.UploadHelper;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.ErrorCode;
 //import com.ott.domain.common.MediaStatus;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.common.PublicStatus;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media.repository.MediaRepository;
-import com.ott.domain.media_tag.repository.MediaTagRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
+import com.ott.infra.db.media_tag.repository.MediaTagRepository;
 import com.ott.domain.member.domain.Member;
 import com.ott.domain.member.domain.Provider;
 import com.ott.domain.member.domain.Role;
-import com.ott.domain.series.repository.SeriesRepository;
+import com.ott.infra.db.series.repository.SeriesRepository;
 import com.ott.domain.short_form.domain.ShortForm;
-import com.ott.domain.short_form.repository.ShortFormRepository;
+import com.ott.infra.db.short_form.repository.ShortFormRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 
 @ExtendWith(MockitoExtension.class)
 class BackOfficeShortFormReaderTest {
@@ -74,9 +74,8 @@ class BackOfficeShortFormReaderTest {
         when(shortFormRepository.findWithMediaAndUploaderByShortFormId(shortFormId)).thenReturn(Optional.of(shortForm));
         when(uploadHelper.getMultipartPartCount(shortForm.getVideoSize())).thenReturn(8);
 
-        List<GrantedAuthority> authorities = List.of((GrantedAuthority) () -> Role.MEMBER.getKey());
-        var auth = new UsernamePasswordAuthenticationToken(55L, null, authorities);
-        int totalParts = reader.getShortFormUploadInfo(shortFormId, objectKey, auth);
+        AdminActor actor = new AdminActor(55L, Set.of(Role.MEMBER.getKey()));
+        int totalParts = reader.getShortFormUploadInfo(shortFormId, objectKey, actor);
 
         verify(uploadHelper).validateOriginObjectKey(objectKey, shortForm.getOriginUrl(), ErrorCode.SHORTFORM_ORIGIN_OBJECT_KEY_MISMATCH);
         assertThat(totalParts).isEqualTo(8);

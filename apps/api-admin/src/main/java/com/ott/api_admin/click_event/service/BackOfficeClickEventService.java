@@ -3,7 +3,7 @@ package com.ott.api_admin.click_event.service;
 import com.ott.api_admin.click_event.dto.response.ShortFormConversionResponse;
 import com.ott.api_admin.click_event.mapper.BackOfficeClickEventMapper;
 import com.ott.domain.click_event.domain.ClickType;
-import com.ott.domain.click_event.repository.ClickRepository;
+import com.ott.infra.db.click_event.repository.ClickRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

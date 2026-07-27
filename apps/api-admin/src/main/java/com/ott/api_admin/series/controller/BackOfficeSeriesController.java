@@ -9,6 +9,7 @@ import com.ott.api_admin.series.dto.response.SeriesUpdateResponse;
 import com.ott.api_admin.series.dto.response.SeriesUploadResponse;
 import com.ott.api_admin.series.service.BackOfficeSeriesService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,7 @@ public class BackOfficeSeriesController implements BackOfficeSeriesApi {
             @RequestParam(value = "searchWord", required = false) String searchWord
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(backOfficeSeriesService.getSeries(page, size, searchWord))
+                SuccessResponse.of(PageResponseMapper.from(backOfficeSeriesService.getSeries(page, size, searchWord)))
         );
     }
 
@@ -50,7 +51,7 @@ public class BackOfficeSeriesController implements BackOfficeSeriesApi {
             @RequestParam(value = "searchWord", required = false) String searchWord
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(backOfficeSeriesService.getSeriesTitle(page, size, searchWord))
+                SuccessResponse.of(PageResponseMapper.from(backOfficeSeriesService.getSeriesTitle(page, size, searchWord)))
         );
     }
 

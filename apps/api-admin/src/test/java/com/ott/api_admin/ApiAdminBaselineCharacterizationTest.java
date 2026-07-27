@@ -3,16 +3,23 @@ package com.ott.api_admin;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ott.api_admin.outbox.poller.OutboxPoller;
+import com.ott.api_admin.trending.event.TrendingCacheInvalidationEvent;
+import com.ott.api_admin.trending.event.TrendingCacheInvalidationListener;
+import com.ott.common.web.exception.GlobalExceptionHandler;
+import com.ott.infra.redis.config.RedisConfig;
 import com.ott.infra.s3.service.S3PresignService;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.cache.RedisCacheManager;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -27,14 +34,14 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 @ActiveProfiles("test")
 @SpringBootTest
-class ApiAdminApplicationTests {
+class ApiAdminBaselineCharacterizationTest {
 
 	private static final String RABBITMQ_USERNAME = "guest";
 	private static final String RABBITMQ_PASSWORD = "guest";
 
 	@Container
 	static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.4.0")
-			.withDatabaseName("api_admin_context")
+			.withDatabaseName("api_admin_baseline")
 			.withUsername("ott")
 			.withPassword("ottpw");
 
@@ -53,16 +60,19 @@ class ApiAdminApplicationTests {
 	private S3PresignService s3PresignService;
 
 	@Autowired
-	private JdbcTemplate jdbcTemplate;
+	private CacheManager cacheManager;
 
 	@Autowired
 	private RedisConnectionFactory redisConnectionFactory;
 
 	@Autowired
-	private ConnectionFactory rabbitConnectionFactory;
+	private TrendingCacheInvalidationListener cacheInvalidationListener;
 
 	@Autowired
-	private CacheManager cacheManager;
+	private GlobalExceptionHandler globalExceptionHandler;
+
+	@Autowired
+	private ConnectionFactory rabbitConnectionFactory;
 
 	@DynamicPropertySource
 	static void containerProperties(DynamicPropertyRegistry registry) {
@@ -78,15 +88,37 @@ class ApiAdminApplicationTests {
 	}
 
 	@Test
-	void contextLoads() {
-		assertThat(jdbcTemplate.queryForObject("select 1", Integer.class)).isEqualTo(1);
+	void currentAdminContextProvidesRedisWebAndRabbitBoundaries() throws Exception {
 		assertThat(cacheManager).isInstanceOf(RedisCacheManager.class);
-
-		try (RedisConnection connection = redisConnectionFactory.getConnection()) {
-			assertThat(connection.ping()).isEqualTo("PONG");
+		assertThat(globalExceptionHandler).isNotNull();
+		try (var connection = rabbitConnectionFactory.createConnection()) {
+			assertThat(connection.isOpen()).isTrue();
 		}
-
-		rabbitConnectionFactory.createConnection().close();
 	}
 
+	@RepeatedTest(2)
+	void currentTrendingInvalidationEvictsRedisBackedAllEntry(RepetitionInfo repetitionInfo) {
+		RedisStandaloneConfiguration consumerConfiguration =
+				new RedisStandaloneConfiguration(redis.getHost(), redis.getFirstMappedPort());
+		LettuceConnectionFactory consumerConnectionFactory = new LettuceConnectionFactory(consumerConfiguration);
+		consumerConnectionFactory.afterPropertiesSet();
+
+		try {
+			CacheManager consumerCacheManager = new RedisConfig().cacheManager(consumerConnectionFactory);
+			Cache consumerCache = consumerCacheManager.getCache("trending");
+			String seededValue = "consumer-value-" + repetitionInfo.getCurrentRepetition();
+
+			assertThat(consumerConnectionFactory).isNotSameAs(redisConnectionFactory);
+			assertThat(consumerCacheManager).isNotSameAs(cacheManager);
+			assertThat(consumerCache).isNotNull();
+			consumerCache.put("all", seededValue);
+			assertThat(consumerCache.get("all", String.class)).isEqualTo(seededValue);
+
+			cacheInvalidationListener.onTrendingCacheInvalidation(new TrendingCacheInvalidationEvent());
+
+			assertThat(consumerCache.get("all")).isNull();
+		} finally {
+			consumerConnectionFactory.destroy();
+		}
+	}
 }

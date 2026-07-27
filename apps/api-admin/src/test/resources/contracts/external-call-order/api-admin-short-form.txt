@@ -1,0 +1,3 @@
+api-admin.short-form.complete -> reader.getShortFormUploadInfo
+api-admin.short-form.complete -> uploadHelper.completeMultipartUpload
+api-admin.short-form.complete -> writer.createIngestJobWithOutbox

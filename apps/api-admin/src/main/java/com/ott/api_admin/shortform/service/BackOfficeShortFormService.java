@@ -1,5 +1,6 @@
 package com.ott.api_admin.shortform.service;
 
+import com.ott.api_admin.common.application.AdminActor;
 import com.ott.api_admin.content.vo.IngestJobResult;
 import com.ott.api_admin.publish.RabbitTranscodePublisher;
 import com.ott.api_admin.shortform.dto.request.ShortFormUpdateRequest;
@@ -11,12 +12,11 @@ import com.ott.api_admin.shortform.dto.response.ShortFormUpdateResponse;
 import com.ott.api_admin.shortform.dto.response.ShortFormUploadResponse;
 import com.ott.api_admin.upload.dto.response.MultipartUploadPartUrlResponse;
 import com.ott.api_admin.upload.support.UploadHelper;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.common.PublicStatus;
 import com.ott.infra.mq.TranscodeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,45 +38,45 @@ public class BackOfficeShortFormService {
 
     // ── 읽기 위임 ──
 
-    public PageResponse<ShortFormListResponse> getShortFormList(
+    public PageResult<ShortFormListResponse> getShortFormList(
             Integer page, Integer size, String searchWord, PublicStatus publicStatus,
-            Authentication authentication) {
-        return reader.getShortFormList(page, size, searchWord, publicStatus, authentication);
+            AdminActor actor) {
+        return reader.getShortFormList(page, size, searchWord, publicStatus, actor);
     }
 
-    public PageResponse<OriginMediaTitleListResponse> getOriginMediaTitle(Integer page, Integer size, String searchWord) {
+    public PageResult<OriginMediaTitleListResponse> getOriginMediaTitle(Integer page, Integer size, String searchWord) {
         return reader.getOriginMediaTitle(page, size, searchWord);
     }
 
-    public ShortFormDetailResponse getShortFormDetail(Long mediaId, Authentication authentication) {
-        return reader.getShortFormDetail(mediaId, authentication);
+    public ShortFormDetailResponse getShortFormDetail(Long mediaId, AdminActor actor) {
+        return reader.getShortFormDetail(mediaId, actor);
     }
 
-    public PageResponse<MultipartUploadPartUrlResponse> getShortFormOriginUploadPartUrls(
+    public PageResult<MultipartUploadPartUrlResponse> getShortFormOriginUploadPartUrls(
             Long shortFormId, String objectKey, String uploadId,
-            Integer page, Integer size, Authentication authentication) {
-        return reader.getShortFormOriginUploadPartUrls(shortFormId, objectKey, uploadId, page, size, authentication);
+            Integer page, Integer size, AdminActor actor) {
+        return reader.getShortFormOriginUploadPartUrls(shortFormId, objectKey, uploadId, page, size, actor);
     }
 
     // ── 쓰기 위임 ──
 
-    public ShortFormUploadResponse createShortFormUpload(ShortFormUploadRequest request, Long memberId) {
-        return writer.createShortFormUpload(request, memberId);
+    public ShortFormUploadResponse createShortFormUpload(ShortFormUploadRequest request, AdminActor actor) {
+        return writer.createShortFormUpload(request, actor);
     }
 
-    public ShortFormUpdateResponse updateShortFormUpload(Long shortformId, ShortFormUpdateRequest request, Authentication authentication) {
-        return writer.updateShortFormUpload(shortformId, request, authentication);
+    public ShortFormUpdateResponse updateShortFormUpload(Long shortformId, ShortFormUpdateRequest request, AdminActor actor) {
+        return writer.updateShortFormUpload(shortformId, request, actor);
     }
 
     // ── complete ──
 
     public void completeShortFormOriginUpload(
             Long shortFormId, String objectKey, String uploadId,
-            List<UploadHelper.MultipartPartETag> parts, Authentication authentication
+            List<UploadHelper.MultipartPartETag> parts, AdminActor actor
     ) {
 
         // Phase 1: 검증 + 권한 체크 + 정보 조회 (readOnly 트랜잭션)
-        int totalPartCount = reader.getShortFormUploadInfo(shortFormId, objectKey, authentication);
+        int totalPartCount = reader.getShortFormUploadInfo(shortFormId, objectKey, actor);
 
         // Phase 2: S3 멀티파트 완료 (트랜잭션 밖 — 외부 호출)
         uploadHelper.completeMultipartUpload(objectKey, uploadId, totalPartCount, parts);
