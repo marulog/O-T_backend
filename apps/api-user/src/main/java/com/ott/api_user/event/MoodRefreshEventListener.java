@@ -27,7 +27,7 @@ public class MoodRefreshEventListener {
     public void handleWatchHistoryCreated(WatchHistoryCreatedEvent event) {
         Long memberId = event.getMemberId();
         log.info("[Mood Refresh] 유저 {}의 시청 기록 추가 감지! 환기 조건 검사를 시작합니다.", memberId);
-        
+
         try {
             moodRefreshService.analyzeAndCreateRefreshCard(memberId);
         } catch (Exception e) {

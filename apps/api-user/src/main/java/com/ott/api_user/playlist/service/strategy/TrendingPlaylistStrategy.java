@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.ott.api_user.playlist.dto.request.PlaylistCondition;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +22,7 @@ public class TrendingPlaylistStrategy implements PlaylistStrategy {
         // 리포지토리 내부에서 excludeMediaId의 유무를 알아서 판단하여 처리합니다.
         return mediaRepository.findTrendingPlaylists(
             condition.getMediaType(),
-            condition.getExcludeMediaId(), 
+            condition.getExcludeMediaId(),
             pageable
         );
     }

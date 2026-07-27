@@ -45,7 +45,7 @@ public class AiClient {
 
             log.info("[User AI] 타겟 태그 응답 완료: {}", response.getTargetTagCodes());
             return response.getTargetTagCodes();
-            
+
         }catch(Exception e){
             log.error("[User AI] 타겟 태그 요청 실패 (inputTags={}): {}", inputTags, e.getMessage());
             // 서버가 터지거나 에러로 멈추지 않도록 빈 리스트를 반환합니다. (안전장치)

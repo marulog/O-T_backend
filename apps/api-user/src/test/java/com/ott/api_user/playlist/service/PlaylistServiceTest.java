@@ -9,21 +9,21 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.ott.api_user.playlist.dto.response.TagPlaylistResponse;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.category.domain.Category;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.member.domain.Member;
 import com.ott.domain.member.domain.Provider;
 import com.ott.domain.member.domain.Role;
-import com.ott.domain.media.repository.MediaRepository;
-import com.ott.domain.media.repository.TagContentProjection;
+import com.ott.infra.db.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.TagContentProjection;
 import com.ott.domain.tag.domain.Tag;
-import com.ott.domain.tag.repository.TagRepository;
-import com.ott.domain.watch_history.repository.RecentWatchProjection;
-import com.ott.domain.watch_history.repository.WatchHistoryRepository;
-import com.ott.domain.contents.repository.ContentsRepository;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.tag.repository.TagRepository;
+import com.ott.infra.db.watch_history.repository.RecentWatchProjection;
+import com.ott.infra.db.watch_history.repository.WatchHistoryRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -108,7 +108,7 @@ class PlaylistServiceTest {
     // 사용자의 최근 시청 기록을 페이지네이션 객체에 맞게 가져오는지 확인
     // 현재 페이지, 총 페이지수, 그리고 각 영상의 시청 길이 등의 데이터가 응답 객체에 올바르게 매핑되는지
     @Test
-    void getWatchHistoryPlaylist_returnsPageResponse() {
+    void getWatchHistoryPlaylist_returnsPageResult() {
         Long memberId = 3L;
         int page = 2;
 
@@ -132,8 +132,8 @@ class PlaylistServiceTest {
 
         var response = playlistService.getWatchHistoryPlaylist(memberId, page);
 
-        assertThat(response.getPageInfo().getCurrentPage()).isEqualTo(page);
-        assertThat(response.getPageInfo().getTotalPage()).isEqualTo(watchHistoryPage.getTotalPages());
+        assertThat(response.getPageMetadata().getCurrentPage()).isEqualTo(page);
+        assertThat(response.getPageMetadata().getTotalPage()).isEqualTo(watchHistoryPage.getTotalPages());
         assertThat(response.getDataList()).hasSize(2);
         assertThat(response.getDataList().get(0).getMediaId()).isEqualTo(11L);
         assertThat(response.getDataList().get(1).getDuration()).isEqualTo(360);

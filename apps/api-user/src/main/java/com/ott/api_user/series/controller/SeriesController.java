@@ -11,9 +11,8 @@ import com.ott.api_user.series.dto.SeriesContentsResponse;
 import com.ott.api_user.series.dto.SeriesDetailResponse;
 import com.ott.api_user.series.service.SeriesService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
-
-import io.micrometer.core.ipc.http.HttpSender.Response;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -39,6 +38,6 @@ public class SeriesController implements SeriesApi {
             @AuthenticationPrincipal Long memberId) {
 
         return ResponseEntity.ok(
-                SuccessResponse.of(seriesService.getSeriesContents(mediaId, pageParam, sizeParam, memberId)));
+                SuccessResponse.of(PageResponseMapper.from(seriesService.getSeriesContents(mediaId, pageParam, sizeParam, memberId))));
     }
 }

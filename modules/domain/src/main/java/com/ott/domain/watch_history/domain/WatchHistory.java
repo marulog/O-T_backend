@@ -56,7 +56,7 @@ public class WatchHistory extends BaseEntity {
     private Integer reWatchCount;
 
     @Column(name = "is_used_for_ml", nullable = false)
-    private boolean isUsedForMl; 
+    private boolean isUsedForMl;
 
     public void updateLastWatchedAt(){
         this.lastWatchedAt = LocalDateTime.now();

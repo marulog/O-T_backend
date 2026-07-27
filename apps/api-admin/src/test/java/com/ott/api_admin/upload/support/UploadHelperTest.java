@@ -2,13 +2,12 @@ package com.ott.api_admin.upload.support;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.member.domain.Member;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 import com.ott.infra.s3.service.S3PresignService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +61,34 @@ class UploadHelperTest {
                 .isInstanceOf(BusinessException.class);
     }
 
+    @Test
+    void buildObjectKey_preservesCurrentPathSegments() {
+        String objectKey = uploadHelper.buildObjectKey("contents", 10L, "poster", "main.jpg");
+        String masterPlaylistObjectKey = uploadHelper.buildMasterPlaylistObjectKey("contents", 10L);
+
+        assertThat(objectKey).isEqualTo("contents/10/poster/main.jpg");
+        assertThat(masterPlaylistObjectKey).isEqualTo("contents/10/transcoded/master.m3u8");
+    }
+
+    @Test
+    void createImageUpload_usesSanitizedFileNameInObjectKey() {
+        when(s3PresignService.toObjectUrl("contents/10/poster/mainposter.jpg"))
+                .thenReturn("https://cdn.example/contents/10/poster/mainposter.jpg");
+        when(s3PresignService.createPutPresignedUrl("contents/10/poster/mainposter.jpg", "image/jpeg"))
+                .thenReturn("https://upload.example/contents/10/poster/mainposter.jpg");
+
+        UploadHelper.UploadFileResult upload = uploadHelper.createImageUpload(
+                "contents",
+                10L,
+                "poster",
+                " main poster!.JPG "
+        );
+
+        assertThat(upload.objectKey()).isEqualTo("contents/10/poster/mainposter.jpg");
+        assertThat(upload.objectUrl()).isEqualTo("https://cdn.example/contents/10/poster/mainposter.jpg");
+        assertThat(upload.uploadUrl()).isEqualTo("https://upload.example/contents/10/poster/mainposter.jpg");
+    }
+
     // Multipart part count를 가져올 때, uploadHelper 내부 로직 호출을 보장
     @Test
     void getMultipartPartCount_usesMultipartPlan() {
@@ -71,5 +98,67 @@ class UploadHelperTest {
 
         int partCount = uploadHelper.getMultipartPartCount(1);
         assertThat(partCount).isPositive();
+    }
+
+    @Test
+    void getMultipartPartUrls_returnsCorePageResult() {
+        when(s3PresignService.createUploadPartPresignedUrl("contents/10/origin/video.mp4", "upload-10", 1))
+                .thenReturn("https://upload.example/part-1");
+        when(s3PresignService.createUploadPartPresignedUrl("contents/10/origin/video.mp4", "upload-10", 2))
+                .thenReturn("https://upload.example/part-2");
+
+        var result = uploadHelper.getMultipartPartUrls(
+                "contents/10/origin/video.mp4",
+                "upload-10",
+                3,
+                0,
+                2
+        );
+
+        assertThat(result.getPageMetadata().getCurrentPage()).isZero();
+        assertThat(result.getPageMetadata().getTotalPage()).isEqualTo(2);
+        assertThat(result.getPageMetadata().getPageSize()).isEqualTo(2);
+        assertThat(result.getDataList())
+                .extracting(UploadHelper.MultipartUploadPartUrl::partNumber)
+                .containsExactly(1, 2);
+    }
+
+    @Test
+    void getMultipartPartUrls_returnsEmptyCorePageResultWhenPageIsPastEnd() {
+        var result = uploadHelper.getMultipartPartUrls(
+                "contents/10/origin/video.mp4",
+                "upload-10",
+                3,
+                2,
+                2
+        );
+
+        assertThat(result.getPageMetadata().getCurrentPage()).isEqualTo(2);
+        assertThat(result.getPageMetadata().getTotalPage()).isEqualTo(2);
+        assertThat(result.getPageMetadata().getPageSize()).isEqualTo(2);
+        assertThat(result.getDataList()).isEmpty();
+    }
+
+    @Test
+    void getMultipartPartUrls_rejectsInvalidPagingInput() {
+        assertThatThrownBy(() -> uploadHelper.getMultipartPartUrls(
+                "contents/10/origin/video.mp4",
+                "upload-10",
+                3,
+                -1,
+                2
+        ))
+                .isInstanceOfSatisfying(BusinessException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT));
+
+        assertThatThrownBy(() -> uploadHelper.getMultipartPartUrls(
+                "contents/10/origin/video.mp4",
+                "upload-10",
+                3,
+                0,
+                0
+        ))
+                .isInstanceOfSatisfying(BusinessException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT));
     }
 }

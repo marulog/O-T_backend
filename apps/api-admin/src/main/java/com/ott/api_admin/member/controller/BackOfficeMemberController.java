@@ -4,6 +4,7 @@ import com.ott.api_admin.member.dto.request.ChangeRoleRequest;
 import com.ott.api_admin.member.dto.response.MemberListResponse;
 import com.ott.api_admin.member.service.BackOfficeMemberService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 import com.ott.domain.member.domain.Role;
 import jakarta.validation.Valid;
@@ -27,7 +28,7 @@ public class BackOfficeMemberController implements BackOfficeMemberApi {
             @RequestParam(value = "role", required = false) Role role
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(backOfficeMemberService.getMemberList(page, size, searchWord, role))
+                SuccessResponse.of(PageResponseMapper.from(backOfficeMemberService.getMemberList(page, size, searchWord, role)))
         );
     }
 

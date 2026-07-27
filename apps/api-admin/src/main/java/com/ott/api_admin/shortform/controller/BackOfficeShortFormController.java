@@ -1,5 +1,6 @@
 package com.ott.api_admin.shortform.controller;
 
+import com.ott.api_admin.common.application.AdminActorMapper;
 import com.ott.api_admin.shortform.dto.response.OriginMediaTitleListResponse;
 import com.ott.api_admin.shortform.dto.response.ShortFormDetailResponse;
 import com.ott.api_admin.shortform.dto.response.ShortFormListResponse;
@@ -12,13 +13,13 @@ import com.ott.api_admin.shortform.dto.request.ShortFormUploadRequest;
 import com.ott.api_admin.upload.support.UploadHelper;
 import com.ott.api_admin.shortform.service.BackOfficeShortFormService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 import com.ott.domain.common.PublicStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,7 +46,13 @@ public class BackOfficeShortFormController implements BackOfficeShortFormApi {
             Authentication authentication
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(backOfficeShortFormService.getShortFormList(page, size, searchWord, publicStatus, authentication))
+                SuccessResponse.of(PageResponseMapper.from(backOfficeShortFormService.getShortFormList(
+                        page,
+                        size,
+                        searchWord,
+                        publicStatus,
+                        AdminActorMapper.from(authentication)
+                )))
         );
     }
 
@@ -57,7 +64,7 @@ public class BackOfficeShortFormController implements BackOfficeShortFormApi {
             @RequestParam(value = "searchWord", required = false) String searchWord
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(backOfficeShortFormService.getOriginMediaTitle(page, size, searchWord))
+                SuccessResponse.of(PageResponseMapper.from(backOfficeShortFormService.getOriginMediaTitle(page, size, searchWord)))
         );
     }
 
@@ -68,7 +75,7 @@ public class BackOfficeShortFormController implements BackOfficeShortFormApi {
             Authentication authentication
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(backOfficeShortFormService.getShortFormDetail(mediaId, authentication))
+                SuccessResponse.of(backOfficeShortFormService.getShortFormDetail(mediaId, AdminActorMapper.from(authentication)))
         );
     }
 
@@ -76,9 +83,12 @@ public class BackOfficeShortFormController implements BackOfficeShortFormApi {
     @PostMapping("/upload")
     public ResponseEntity<SuccessResponse<ShortFormUploadResponse>> createShortFormUpload(
             @Valid @RequestBody ShortFormUploadRequest request,
-            @AuthenticationPrincipal Long memberId
+            Authentication authentication
     ) {
-        return ResponseEntity.ok(SuccessResponse.of(backOfficeShortFormService.createShortFormUpload(request, memberId)));
+        return ResponseEntity.ok(SuccessResponse.of(backOfficeShortFormService.createShortFormUpload(
+                request,
+                AdminActorMapper.from(authentication)
+        )));
     }
 
     @Override
@@ -88,7 +98,11 @@ public class BackOfficeShortFormController implements BackOfficeShortFormApi {
             @Valid @RequestBody ShortFormUpdateRequest request,
             Authentication authentication
     ) {
-        return ResponseEntity.ok(SuccessResponse.of(backOfficeShortFormService.updateShortFormUpload(shortformId, request, authentication)));
+        return ResponseEntity.ok(SuccessResponse.of(backOfficeShortFormService.updateShortFormUpload(
+                shortformId,
+                request,
+                AdminActorMapper.from(authentication)
+        )));
     }
 
     @Override
@@ -105,7 +119,7 @@ public class BackOfficeShortFormController implements BackOfficeShortFormApi {
                 request.parts().stream()
                         .map(part -> new UploadHelper.MultipartPartETag(part.partNumber(), part.eTag()))
                         .toList(),
-                authentication
+                AdminActorMapper.from(authentication)
         );
         return ResponseEntity.ok(SuccessResponse.of(null));
     }
@@ -122,14 +136,14 @@ public class BackOfficeShortFormController implements BackOfficeShortFormApi {
     ) {
         return ResponseEntity.ok(
                 SuccessResponse.of(
-                        backOfficeShortFormService.getShortFormOriginUploadPartUrls(
+                        PageResponseMapper.from(backOfficeShortFormService.getShortFormOriginUploadPartUrls(
                                 shortformId,
                                 objectKey,
                                 uploadId,
                                 page,
                                 size,
-                                authentication
-                        )
+                                AdminActorMapper.from(authentication)
+                        ))
                 )
         );
     }

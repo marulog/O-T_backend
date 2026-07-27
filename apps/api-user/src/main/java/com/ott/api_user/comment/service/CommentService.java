@@ -5,18 +5,18 @@ import com.ott.api_user.comment.dto.request.UpdateCommentRequest;
 import com.ott.api_user.comment.dto.response.CommentResponse;
 import com.ott.api_user.comment.dto.response.ContentsCommentResponse;
 import com.ott.api_user.comment.dto.response.MyCommentResponse;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.comment.domain.Comment;
-import com.ott.domain.comment.repository.CommentRepository;
+import com.ott.infra.db.comment.repository.CommentRepository;
 import com.ott.domain.common.PublicStatus;
 import com.ott.domain.common.Status;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.member.domain.Member;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -95,7 +95,7 @@ public class CommentService {
 
         // 댓글 조회 - 본인 댓글만 조회 가능(최신순)
         @Transactional(readOnly = true)
-        public PageResponse<MyCommentResponse> getMyComments(
+        public PageResult<MyCommentResponse> getMyComments(
                 Long memberId,
                 Integer page,
                 Integer size) {
@@ -108,18 +108,18 @@ public class CommentService {
                         .map(MyCommentResponse::from)
                         .toList();
 
-                PageInfo pageInfo = PageInfo.toPageInfo(
+                PageMetadata pageMetadata = PageMetadata.of(
                         commentPage.getNumber(),
                         commentPage.getTotalPages(),
                         commentPage.getSize()
                 );
 
-                return PageResponse.toPageResponse(pageInfo, responseList);
+                return PageResult.of(pageMetadata, responseList);
         }
-        
+
         // 콘텐츠 상세 조회 댓글 목록
         @Transactional(readOnly = true)
-        public PageResponse<ContentsCommentResponse> getContentsCommentList(Long mediaId, Long memberId, int page, int size, boolean includeSpoiler) {
+        public PageResult<ContentsCommentResponse> getContentsCommentList(Long mediaId, Long memberId, int page, int size, boolean includeSpoiler) {
 
                 // mediaId를 기준으로 Contents 엔티티 조회
                 Contents contents = contentsRepository.findByMediaIdAndStatusAndMedia_PublicStatus(mediaId, Status.ACTIVE, PublicStatus.PUBLIC)
@@ -133,18 +133,18 @@ public class CommentService {
                         .map(comment -> {
                                 // 유저 ID가 댓글 작성자의 ID와 같다면 true
                                 Boolean isMine = isCommentOwner(comment, memberId);
-                                
+
                                 // 수정된 DTO의 of 메서드 사용
                                 return ContentsCommentResponse.from(comment, isMine);
                         })
                         .toList();
 
-                PageInfo pageInfo = PageInfo.toPageInfo(
+                PageMetadata pageMetadata = PageMetadata.of(
                         commentPage.getNumber(),
                         commentPage.getTotalPages(),
                         commentPage.getSize());
 
-                return PageResponse.toPageResponse(pageInfo, responseList);
+                return PageResult.of(pageMetadata, responseList);
         }
 
         private boolean isCommentOwner(Comment comment, Long currentMemberId) {

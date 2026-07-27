@@ -10,7 +10,7 @@ import com.ott.api_admin.content.vo.IngestJobResult;
 import com.ott.api_admin.publish.RabbitTranscodePublisher;
 import com.ott.api_admin.upload.dto.response.MultipartUploadPartUrlResponse;
 import com.ott.api_admin.upload.support.UploadHelper;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.common.PublicStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public class BackOfficeContentsService {
 
     // ── 읽기 위임 ──
 
-    public PageResponse<ContentsListResponse> getContents(int page, int size, String searchWord, PublicStatus publicStatus) {
+    public PageResult<ContentsListResponse> getContents(int page, int size, String searchWord, PublicStatus publicStatus) {
         return reader.getContents(page, size, searchWord, publicStatus);
     }
 
@@ -43,7 +43,7 @@ public class BackOfficeContentsService {
         return reader.getContentsDetail(mediaId);
     }
 
-    public PageResponse<MultipartUploadPartUrlResponse> getContentsOriginUploadPartUrls(
+    public PageResult<MultipartUploadPartUrlResponse> getContentsOriginUploadPartUrls(
             Long contentsId, String objectKey, String uploadId, Integer page, Integer size) {
         return reader.getContentsOriginUploadPartUrls(contentsId, objectKey, uploadId, page, size);
     }

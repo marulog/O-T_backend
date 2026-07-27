@@ -11,21 +11,21 @@ import static org.mockito.Mockito.when;
 import com.ott.api_user.ai.client.AiClient;
 import com.ott.api_user.ai.service.GeminiService;
 import com.ott.api_user.moodrefresh.dto.response.MoodRefreshResponse;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.common.Status;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.media.domain.Media;
 import com.ott.domain.media.domain.MediaStatus;
 import com.ott.domain.media_mood_tag.domain.MediaMoodTag;
-import com.ott.domain.media_mood_tag.repository.MediaMoodTagRepository;
+import com.ott.infra.db.media_mood_tag.repository.MediaMoodTagRepository;
 import com.ott.domain.member.domain.Member;
 import com.ott.domain.mood_category.domain.MoodCategory;
 import com.ott.domain.mood_tag.domain.MoodTag;
 import com.ott.domain.moodrefresh.domain.MemberMoodRefresh;
-import com.ott.domain.moodrefresh.repository.MemberMoodRefreshRepository;
+import com.ott.infra.db.moodrefresh.repository.MemberMoodRefreshRepository;
 import com.ott.domain.watch_history.domain.WatchHistory;
-import com.ott.domain.watch_history.repository.WatchHistoryRepository;
+import com.ott.infra.db.watch_history.repository.WatchHistoryRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +44,7 @@ class MoodRefreshServiceTest {
     private MemberMoodRefreshRepository refreshRepository;
 
     @Mock
-    private com.ott.domain.media.repository.MediaRepository mediaRepository;
+    private com.ott.infra.db.media.repository.MediaRepository mediaRepository;
 
     @Mock
     private WatchHistoryRepository watchHistoryRepository;
@@ -56,10 +56,10 @@ class MoodRefreshServiceTest {
     private MediaMoodTagRepository mediaMoodTagRepository;
 
     @Mock
-    private com.ott.domain.mood_tag.repository.MoodTagRepository moodTagRepository;
+    private com.ott.infra.db.mood_tag.repository.MoodTagRepository moodTagRepository;
 
     @Mock
-    private com.ott.domain.member.repository.MemberRepository memberRepository;
+    private com.ott.infra.db.member.repository.MemberRepository memberRepository;
 
     @Mock
     private GeminiService geminiService;

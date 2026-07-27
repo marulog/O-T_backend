@@ -4,7 +4,7 @@ import com.ott.api_admin.outbox.writer.OutboxWriter;
 import com.ott.api_admin.publish.RabbitTranscodePublisher;
 import com.ott.domain.outbox.domain.OutboxStatus;
 import com.ott.domain.outbox.domain.TranscodeOutbox;
-import com.ott.domain.outbox.repository.TranscodeOutboxRepository;
+import com.ott.infra.db.outbox.repository.TranscodeOutboxRepository;
 import com.ott.infra.mq.TranscodeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

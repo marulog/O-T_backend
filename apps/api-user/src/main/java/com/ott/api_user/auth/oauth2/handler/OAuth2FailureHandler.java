@@ -17,6 +17,8 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
+    private static final String OAUTH_AUTHENTICATION_FAILED = "oauth_authentication_failed";
+
     @Value("${app.frontend-url}")
     private String frontedUrl;
 
@@ -25,10 +27,10 @@ public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler 
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
 
-        log.info("OAuth2 로그인 실패: {}", exception.getMessage());
+        log.warn("OAuth2 authentication failed: errorCode={}", OAUTH_AUTHENTICATION_FAILED);
 
         String targetUrl = frontedUrl + "/auth/login?error="
-                + URLEncoder.encode(exception.getMessage(), StandardCharsets.UTF_8);
+                + URLEncoder.encode(OAUTH_AUTHENTICATION_FAILED, StandardCharsets.UTF_8);
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }

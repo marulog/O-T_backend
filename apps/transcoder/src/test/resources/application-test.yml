@@ -1,0 +1,49 @@
+spring:
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:transcoder_context;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  flyway:
+    enabled: false
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+  rabbitmq:
+    dynamic: false
+    username: guest
+    password: guest
+    listener:
+      simple:
+        auto-startup: false
+      direct:
+        auto-startup: false
+
+transcoder:
+  messaging:
+    provider: none
+  worker:
+    scale-in-protection:
+      enabled: false
+  ffmpeg:
+    engine: none
+    path: dummy-ffmpeg
+    temp-dir: ${java.io.tmpdir}/ott-transcode-test
+    segment-duration: 10
+  ffprobe:
+    engine: none
+    path: dummy-ffprobe
+
+storage:
+  provider: local
+  local:
+    output-dir: ${java.io.tmpdir}/ott-storage-test
+  s3:
+    bucket: test-bucket
+
+aws:
+  region: ap-northeast-2

@@ -16,17 +16,17 @@ import com.ott.domain.common.Status;
 import com.ott.domain.contents.domain.Contents;
 import com.ott.domain.media.domain.Media;
 import com.ott.domain.media_mood_tag.domain.MediaMoodTag;
-import com.ott.domain.media_mood_tag.repository.MediaMoodTagRepository;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.media_mood_tag.repository.MediaMoodTagRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 import com.ott.domain.mood_tag.domain.MoodTag;
-import com.ott.domain.mood_tag.repository.MoodTagRepository;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.mood_tag.repository.MoodTagRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 import com.ott.domain.moodrefresh.domain.MemberMoodRefresh;
-import com.ott.domain.moodrefresh.repository.MemberMoodRefreshRepository;
+import com.ott.infra.db.moodrefresh.repository.MemberMoodRefreshRepository;
 import com.ott.domain.watch_history.domain.WatchHistory;
-import com.ott.domain.watch_history.repository.WatchHistoryRepository;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.infra.db.watch_history.repository.WatchHistoryRepository;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +43,7 @@ public class MoodRefreshService {
     private final MemberRepository memberRepository;
     private final GeminiService geminiService;
 
-    // 홈 화면에 노출시킬 카드 
+    // 홈 화면에 노출시킬 카드
     @Transactional(readOnly = true)
     public MoodRefreshResponse getActiveRefreshCard(Long memberId) {
     return refreshRepository.findTopByMemberIdAndIsHiddenFalseOrderByCreatedDateDesc(memberId)
@@ -59,16 +59,16 @@ public class MoodRefreshService {
     public void hideRefreshCard(Long memberId, Long refreshId) {
         MemberMoodRefresh card = refreshRepository.findById(refreshId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REFRESH_CARD_NOT_FOUND));
-        
+
                 if (!card.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED); // 접근 권한 에러 던지기
         }
-        
+
         card.hideCard();
     }
 
 
-    // 이벤트리스너 시작 시 - 메인 로직 
+    // 이벤트리스너 시작 시 - 메인 로직
     @Transactional
     public void analyzeAndCreateRefreshCard(Long memberId) {
 
@@ -81,7 +81,7 @@ public class MoodRefreshService {
         }
 
         LocalDateTime seventyTwoHoursAgo = LocalDateTime.now().minusHours(72);
-        
+
         // 최근 72시간 내 가장 최근 3개 시청 기록 가져오기
         List<WatchHistory> recentHistories = watchHistoryRepository
                 .findRecentUnusedHistoriesWithin(memberId, seventyTwoHoursAgo, 3);
@@ -116,7 +116,7 @@ public class MoodRefreshService {
 
         String topTargetTag = targetTags.get(0);
         List<Media> recommendedMedias = mediaRepository.findByTop3ByMoodTagName(topTargetTag);
-        
+
 
         if (recommendedMedias.size() < 3) {
             log.info("[Mood Refresh] 타겟 태그({})에 해당하는 활성 영상이 3개 미만입니다. 카드 생성 취소", topTargetTag);
@@ -127,11 +127,11 @@ public class MoodRefreshService {
                 .map(Media::getId)
                 .toList();
 
-        String userMoodStr = String.join(",", inputTags); 
-        
+        String userMoodStr = String.join(",", inputTags);
+
         // 2. Gemini 호출! (유저 기분 문자열과 AI가 추천해준 타겟 태그 리스트 전달)
         String llmSubtitle = geminiService.generateHealingMessage(userMoodStr, targetTags);
-        
+
         log.info("[Mood Refresh] Gemini 멘트 생성 완료: {}", llmSubtitle);
 
         String combinedContent = llmSubtitle + "|" + String.join(",", targetTags);
@@ -148,10 +148,10 @@ public class MoodRefreshService {
         recentHistories.forEach(WatchHistory::markAsUsedForMl);
 
         log.info("[Mood Refresh] 유저 {}을 위한 분위기 환기 카드 생성 완료! (타겟 태그: {})", memberId, topTargetTag);
-    
+
 
     }
-    
+
 
     // 위 메인 로직에 필요한 필터링 메서드
 
@@ -225,7 +225,7 @@ public class MoodRefreshService {
                 ))
                 .values().stream()
                 // 2. 각 영상당 상위 3개의 태그만 자름 (limit 3)
-                .flatMap(tags -> tags.stream().limit(3)) 
+                .flatMap(tags -> tags.stream().limit(3))
                 .filter(StringUtils::hasText) // 3. 빈 문자열 방어
                 .distinct() // 4. 최종적으로 남은 태그들의 중복 제거
                 .toList();

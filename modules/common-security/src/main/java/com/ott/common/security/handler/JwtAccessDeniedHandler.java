@@ -1,8 +1,7 @@
 package com.ott.common.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.exception.ErrorResponse;
+import com.ott.common.core.error.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +29,10 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
             AccessDeniedException accessDeniedException
     ) throws IOException {
 
-        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.FORBIDDEN, accessDeniedException.getMessage());
+        log.warn("JWT access denied: errorCode={}", ErrorCode.FORBIDDEN.getCode());
+        SecurityErrorResponse errorResponse = SecurityErrorResponse.of(ErrorCode.FORBIDDEN, ErrorCode.FORBIDDEN.getMessage());
 
-        response.setStatus(ErrorCode.FORBIDDEN.getStatus().value());
+        response.setStatus(SecurityHttpStatusMapper.toHttpStatus(ErrorCode.FORBIDDEN));
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 

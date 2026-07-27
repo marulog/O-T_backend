@@ -1,7 +1,7 @@
 package com.ott.api_admin.outbox.writer;
 
 import com.ott.domain.outbox.domain.TranscodeOutbox;
-import com.ott.domain.outbox.repository.TranscodeOutboxRepository;
+import com.ott.infra.db.outbox.repository.TranscodeOutboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

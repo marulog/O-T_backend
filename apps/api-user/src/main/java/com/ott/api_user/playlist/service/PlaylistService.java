@@ -4,21 +4,21 @@ import java.util.List;
 
 import com.ott.api_user.playlist.dto.response.RecentWatchResponse;
 import com.ott.api_user.playlist.dto.response.TagPlaylistResponse;
-import com.ott.domain.media.repository.MediaRepository;
-import com.ott.domain.member.repository.MemberRepository;
-import com.ott.domain.tag.repository.TagRepository;
-import com.ott.domain.watch_history.repository.RecentWatchProjection;
-import com.ott.domain.watch_history.repository.WatchHistoryRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
+import com.ott.infra.db.tag.repository.TagRepository;
+import com.ott.infra.db.watch_history.repository.RecentWatchProjection;
+import com.ott.infra.db.watch_history.repository.WatchHistoryRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 
 
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,7 @@ public class PlaylistService {
 
     // 전체 시청이력 플레이리스트 페이징 조회 (최신순, 10개씩)
     @Transactional(readOnly = true)
-    public PageResponse<RecentWatchResponse> getWatchHistoryPlaylist(Long memberId, Integer page) {
+    public PageResult<RecentWatchResponse> getWatchHistoryPlaylist(Long memberId, Integer page) {
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -65,12 +65,12 @@ public class PlaylistService {
                 .map(RecentWatchResponse::from)
                 .toList();
 
-        PageInfo pageInfo = PageInfo.toPageInfo(
+        PageMetadata pageMetadata = PageMetadata.of(
                 watchPage.getNumber(),
                 watchPage.getTotalPages(),
                 watchPage.getSize()
         );
 
-        return PageResponse.toPageResponse(pageInfo, dataList);
+        return PageResult.of(pageMetadata, dataList);
     }
 }

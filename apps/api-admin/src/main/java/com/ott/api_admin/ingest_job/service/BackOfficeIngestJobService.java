@@ -1,22 +1,22 @@
 package com.ott.api_admin.ingest_job.service;
 
+import com.ott.api_admin.common.application.AdminActor;
 import com.ott.api_admin.ingest_job.dto.response.IngestJobListResponse;
 import com.ott.api_admin.ingest_job.mapper.BackOfficeIngestJobMapper;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.ingest_job.domain.IngestJob;
-import com.ott.domain.ingest_job.repository.IngestJobRepository;
+import com.ott.infra.db.ingest_job.repository.IngestJobRepository;
 import com.ott.domain.member.domain.Role;
 import com.ott.domain.short_form.domain.ShortForm;
-import com.ott.domain.short_form.repository.ShortFormRepository;
+import com.ott.infra.db.short_form.repository.ShortFormRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,15 +36,14 @@ public class BackOfficeIngestJobService {
     private final ShortFormRepository shortFormRepository;
 
     @Transactional(readOnly = true)
-    public PageResponse<IngestJobListResponse> getIngestJobList(
-            Integer page, Integer size, String searchWord, Authentication authentication
+    public PageResult<IngestJobListResponse> getIngestJobList(
+            Integer page, Integer size, String searchWord, AdminActor actor
     ) {
         Pageable pageable = PageRequest.of(page, size);
 
         // 1. 관리자/에디터 여부 확인
-        Long memberId = (Long) authentication.getPrincipal();
-        boolean isEditor = authentication.getAuthorities().stream()
-                .anyMatch(authority -> Role.EDITOR.getKey().equals(authority.getAuthority()));
+        Long memberId = actor.memberId();
+        boolean isEditor = actor.roleKeys().contains(Role.EDITOR.getKey());
         Long uploaderId = null;
 
         // 2. 에디터인 경우 본인이 업로드한 작업만 조회 가능
@@ -89,12 +88,12 @@ public class BackOfficeIngestJobService {
                 .map(j -> backOfficeIngestJobMapper.toIngestJobListResponse(j, videoSizeByMediaId))
                 .toList();
 
-        PageInfo pageInfo = PageInfo.toPageInfo(
+        PageMetadata pageMetadata = PageMetadata.of(
                 ingestJobPage.getNumber(),
                 ingestJobPage.getTotalPages(),
                 ingestJobPage.getSize()
         );
 
-        return PageResponse.toPageResponse(pageInfo, responseList);
+        return PageResult.of(pageMetadata, responseList);
     }
 }

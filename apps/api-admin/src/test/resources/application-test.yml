@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  flyway:
+    enabled: false
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+  data:
+    redis:
+      password:
+      timeout: 3000ms
+  rabbitmq:
+    publisher-confirm-type: simple
+
+jwt:
+  secret: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+  access-token-expiry: 1800000
+  refresh-token-expiry: 1209600000
+
+cloudfront:
+  signed-cookie:
+    resource-url: https://cdn.openthetaste.cloud/*
+    key-pair-id: test-key-pair
+    private-key-base64:
+    ttl-seconds: 2400000
+
+ai:
+  base-url: http://localhost:8000
+  timeout-ms: 5000
+
+aws:
+  region: ap-northeast-2

@@ -1,0 +1,3 @@
+api-admin.outbox.poll -> outboxRepository.findPending
+api-admin.outbox.poll -> rabbitTranscodePublisher.publish
+api-admin.outbox.poll -> outboxWriter.markAsPublished

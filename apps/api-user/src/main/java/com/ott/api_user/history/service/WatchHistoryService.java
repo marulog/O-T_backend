@@ -7,16 +7,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ott.api_user.event.WatchHistoryCreatedEvent;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.common.PublicStatus;
 import com.ott.domain.common.Status;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.member.domain.Member;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 import com.ott.domain.watch_history.domain.WatchHistory;
-import com.ott.domain.watch_history.repository.WatchHistoryRepository;
+import com.ott.infra.db.watch_history.repository.WatchHistoryRepository;
 
 
 import lombok.RequiredArgsConstructor;
@@ -37,15 +37,15 @@ public class WatchHistoryService {
     public void upsertWatchHistory(Long memberId, Long mediaId){
         Contents contents = contentsRepository.findByMediaIdAndStatusAndMedia_PublicStatus(mediaId, Status.ACTIVE, PublicStatus.PUBLIC)
                 .orElseThrow(()-> new BusinessException(ErrorCode.CONTENTS_NOT_FOUND));
-        
 
-        
+
+
         watchHistoryRepository.upsertWatchHistory(memberId, contents.getId());
 
         log.info("이벤트 발송 직전");
-        
+
         eventPublisher.publishEvent(new WatchHistoryCreatedEvent(memberId));
 
     }
-    
+
 }

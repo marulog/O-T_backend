@@ -1,37 +1,46 @@
 package com.ott.api_user.ai.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import com.ott.api_user.ai.dto.GeminiRequest;
 import com.ott.api_user.ai.dto.GeminiResponse;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 
 
 @Service
 public class GeminiService {
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(15);
+
     @Value("${gemini.api.url}")
     private String geminiApiUrl;
 
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
-    private final RestTemplate restTemplate;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
 
-    public GeminiService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public GeminiService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build();
     }
 
     public String generateHealingMessage(String userMood, List<String> recommendedTags) {
         // 1. 파이썬에서 받은 태그 리스트를 하나의 문자열로 결합 ("힐링, 도파민_폭발, 평화로운")
         String tagsStr = String.join(", ", recommendedTags);
-        
+
         // 2. 프롬프트 엔지니어링
         String promptText = String.format(
             "너는 트렌디한 스트리밍 앱 'O+T'의 메인 카피라이터야. " +
@@ -48,29 +57,28 @@ public class GeminiService {
             userMood, tagsStr
         );
 
-
-        // 3. API 요청 객체 조립
-        GeminiRequest.Part part = new GeminiRequest.Part(promptText);
-        GeminiRequest.Content content = new GeminiRequest.Content(List.of(part));
-        GeminiRequest requestBody = new GeminiRequest(List.of(content));
-
-        // 4. 헤더 설정 (API 키는 URL 쿼리 파라미터로도 넣을 수 있고 헤더로도 넣을 수 있습니다)
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        String requestUrl = geminiApiUrl + "?key=" + geminiApiKey;
-        HttpEntity<GeminiRequest> requestEntity = new HttpEntity<>(requestBody, headers);
-
         try {
+            // 3. API 요청 객체 조립
+            GeminiRequest.Part part = new GeminiRequest.Part(promptText);
+            GeminiRequest.Content content = new GeminiRequest.Content(List.of(part));
+            GeminiRequest requestBody = new GeminiRequest(List.of(content));
+            String requestUrl = geminiApiUrl + "?key=" + geminiApiKey;
+            HttpRequest request = HttpRequest.newBuilder(URI.create(requestUrl))
+                    .timeout(READ_TIMEOUT)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestBody)))
+                    .build();
+
             // 5. API 호출!
-            GeminiResponse response = restTemplate.postForObject(requestUrl, requestEntity, GeminiResponse.class);
-            
+            HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            GeminiResponse response = objectMapper.readValue(httpResponse.body(), GeminiResponse.class);
+
             // 6. 응답에서 알맹이 텍스트만 쏙 빼오기
             if (response != null && !response.candidates().isEmpty()) {
                 return response.candidates().get(0).content().parts().get(0).text();
             }
             return "오늘 하루도 수고 많으셨어요. O+T가 추천하는 영상과 함께 편안한 시간 보내세요."; // Fallback 멘트
-            
+
         } catch (Exception e) {
             System.err.println("Gemini API 호출 실패: " + e.getMessage());
             return "추천 영상과 함께 기분 좋은 시간 보내시길 바랄게요!"; // 서버 에러 시 기본 멘트

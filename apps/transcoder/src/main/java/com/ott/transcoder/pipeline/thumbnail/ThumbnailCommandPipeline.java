@@ -1,9 +1,9 @@
 package com.ott.transcoder.pipeline.thumbnail;
 
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.ingest_command.domain.CommandType;
 import com.ott.transcoder.command.Command;
 import com.ott.transcoder.command.ThumbnailCommand;

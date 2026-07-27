@@ -1,13 +1,13 @@
 package com.ott.transcoder.command;
 
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.ingest_command.domain.CommandStatus;
 import com.ott.domain.ingest_command.domain.IngestCommand;
-import com.ott.domain.ingest_command.repository.IngestCommandRepository;
+import com.ott.infra.db.ingest_command.repository.IngestCommandRepository;
 import com.ott.domain.ingest_job.domain.IngestJob;
-import com.ott.domain.ingest_job.repository.IngestJobRepository;
+import com.ott.infra.db.ingest_job.repository.IngestJobRepository;
 import com.ott.transcoder.ffmpeg.Resolution;
 import com.ott.transcoder.inspection.probe.ProbeResult;
 import com.ott.infra.mq.TranscodeMessage;

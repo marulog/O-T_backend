@@ -11,6 +11,7 @@ import com.ott.api_admin.upload.dto.response.MultipartUploadPartUrlResponse;
 import com.ott.api_admin.upload.support.UploadHelper;
 import com.ott.api_admin.content.service.BackOfficeContentsService;
 import com.ott.common.web.response.PageResponse;
+import com.ott.common.web.response.PageResponseMapper;
 import com.ott.common.web.response.SuccessResponse;
 import com.ott.domain.common.PublicStatus;
 import jakarta.validation.Valid;
@@ -42,7 +43,7 @@ public class BackOfficeContentsController implements BackOfficeContentsApi {
             @RequestParam(value = "publicStatus", required = false) PublicStatus publicStatus
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(backOfficeContentsService.getContents(page, size, searchWord, publicStatus))
+                SuccessResponse.of(PageResponseMapper.from(backOfficeContentsService.getContents(page, size, searchWord, publicStatus)))
         );
     }
 
@@ -100,7 +101,7 @@ public class BackOfficeContentsController implements BackOfficeContentsApi {
             @RequestParam(value = "size", defaultValue = "100") Integer size
     ) {
         return ResponseEntity.ok(
-                SuccessResponse.of(backOfficeContentsService.getContentsOriginUploadPartUrls(contentsId, objectKey, uploadId, page, size))
+                SuccessResponse.of(PageResponseMapper.from(backOfficeContentsService.getContentsOriginUploadPartUrls(contentsId, objectKey, uploadId, page, size)))
         );
     }
 }

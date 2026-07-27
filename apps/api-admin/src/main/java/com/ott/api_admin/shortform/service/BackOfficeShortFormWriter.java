@@ -1,5 +1,6 @@
 package com.ott.api_admin.shortform.service;
 
+import com.ott.api_admin.common.application.AdminActor;
 import com.ott.api_admin.content.vo.IngestJobResult;
 import com.ott.api_admin.shortform.dto.request.ShortFormUpdateRequest;
 import com.ott.api_admin.shortform.dto.request.ShortFormUploadRequest;
@@ -7,31 +8,30 @@ import com.ott.api_admin.shortform.dto.response.ShortFormUpdateResponse;
 import com.ott.api_admin.shortform.dto.response.ShortFormUploadResponse;
 import com.ott.api_admin.shortform.mapper.BackOfficeShortFormMapper;
 import com.ott.api_admin.upload.support.UploadHelper;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.common.MediaType;
 import com.ott.domain.common.PublicStatus;
 import com.ott.domain.contents.domain.Contents;
-import com.ott.domain.contents.repository.ContentsRepository;
+import com.ott.infra.db.contents.repository.ContentsRepository;
 import com.ott.domain.media.domain.Media;
 import com.ott.domain.media.domain.MediaStatus;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 import com.ott.domain.media_tag.domain.MediaTag;
-import com.ott.domain.media_tag.repository.MediaTagRepository;
+import com.ott.infra.db.media_tag.repository.MediaTagRepository;
 import com.ott.domain.member.domain.Member;
 import com.ott.domain.member.domain.Role;
 import com.ott.domain.ingest_job.domain.IngestJob;
 import com.ott.domain.ingest_job.domain.IngestStatus;
-import com.ott.domain.ingest_job.repository.IngestJobRepository;
+import com.ott.infra.db.ingest_job.repository.IngestJobRepository;
 import com.ott.domain.outbox.domain.TranscodeOutbox;
-import com.ott.domain.outbox.repository.TranscodeOutboxRepository;
+import com.ott.infra.db.outbox.repository.TranscodeOutboxRepository;
 import com.ott.domain.series.domain.Series;
-import com.ott.domain.series.repository.SeriesRepository;
+import com.ott.infra.db.series.repository.SeriesRepository;
 import com.ott.domain.short_form.domain.ShortForm;
-import com.ott.domain.short_form.repository.ShortFormRepository;
+import com.ott.infra.db.short_form.repository.ShortFormRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,8 +53,8 @@ public class BackOfficeShortFormWriter {
     private final UploadHelper uploadHelper;
 
     @Transactional
-    public ShortFormUploadResponse createShortFormUpload(ShortFormUploadRequest request, Long memberId) {
-        Member uploader = uploadHelper.resolveUploader(memberId);
+    public ShortFormUploadResponse createShortFormUpload(ShortFormUploadRequest request, AdminActor actor) {
+        Member uploader = uploadHelper.resolveUploader(actor.memberId());
         Series series = null;
         Contents contents = null;
 
@@ -144,14 +144,13 @@ public class BackOfficeShortFormWriter {
     }
 
     @Transactional
-    public ShortFormUpdateResponse updateShortFormUpload(Long shortformId, ShortFormUpdateRequest request, Authentication authentication) {
+    public ShortFormUpdateResponse updateShortFormUpload(Long shortformId, ShortFormUpdateRequest request, AdminActor actor) {
         ShortForm shortForm = shortFormRepository.findWithMediaAndUploaderByShortFormId(shortformId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SHORT_FORM_NOT_FOUND));
 
         Media media = shortForm.getMedia();
-        Long memberId = (Long) authentication.getPrincipal();
-        boolean isEditor = authentication.getAuthorities().stream()
-                .anyMatch(authority -> Role.EDITOR.getKey().equals(authority.getAuthority()));
+        Long memberId = actor.memberId();
+        boolean isEditor = actor.roleKeys().contains(Role.EDITOR.getKey());
         if (isEditor && !media.getUploader().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }

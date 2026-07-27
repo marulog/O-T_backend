@@ -1,6 +1,7 @@
 package com.ott.common.web.exception;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.ott.common.core.error.ErrorCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -42,7 +43,7 @@ public class ErrorResponse {
     private ErrorResponse(ErrorCode errorCode) {
         this.code = errorCode.getCode();
         this.message = errorCode.getMessage();
-        this.status = errorCode.getStatus().value();
+        this.status = ErrorHttpStatusMapper.toHttpStatus(errorCode).value();
         this.timestamp = LocalDateTime.now();
     }
 

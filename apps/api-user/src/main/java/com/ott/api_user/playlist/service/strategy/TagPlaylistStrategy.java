@@ -11,10 +11,10 @@ import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import com.ott.api_user.playlist.dto.request.PlaylistCondition;
 import com.ott.api_user.playlist.service.PlaylistPreferenceService;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.media.domain.Media;
-import com.ott.domain.media.repository.MediaRepository;
+import com.ott.infra.db.media.repository.MediaRepository;
 import com.ott.domain.tag.domain.Tag;
 
 /**
@@ -41,7 +41,7 @@ public class TagPlaylistStrategy implements PlaylistStrategy {
             // 유저의 취향 Top 3 태그를 계산해서 가져옴
             List<Tag> topTags = preferenceService.getTopTags(condition.getMemberId());
             int index = condition.getIndex();
-            
+
             // 프론트가 요청한 순위(index)의 태그 ID를 타겟으로 설정
             if (index >= 0 && condition.getIndex() < topTags.size()) {
                 targetTagId = topTags.get(condition.getIndex()).getId();
@@ -56,10 +56,10 @@ public class TagPlaylistStrategy implements PlaylistStrategy {
 
         // 2. 모수 풀링: 홈 화면(page=0)은 섞기 위해 50개를 넉넉히 가져오고, 상세 페이지는 요구한 만큼만 가져옴
         int fetchLimit = (pageable.getPageNumber() == 0 && isHomeScreen) ? 50 : pageable.getPageSize();
-        
+
         // 홈 화면은 항상 무작위로 섞을 거니까 0으로 고정,  상세 페이지는 페이지에 맞게 건너뜀
         long fetchOffset = (isHomeScreen) ? 0 : pageable.getOffset();
-        
+
         List<Media> mediaPool = mediaRepository.findMediasByTagId(targetTagId, condition.getMediaType(), condition.getExcludeMediaId(), fetchLimit, fetchOffset);
 
         // 3. 디스커버리 UX: 홈 화면일 경우에만 매번 새로운 콘텐츠를 발견하도록 리스트를 무작위로 섞음

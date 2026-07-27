@@ -1,5 +1,6 @@
 package com.ott.common.web.response;
 
+import com.ott.common.core.response.PageMetadata;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,6 +27,14 @@ public class PageInfo {
                 .totalPage(totalPage)
                 .pageSize(pageSize)
                 .build();
+    }
+
+    public static PageInfo from(PageMetadata pageMetadata) {
+        return toPageInfo(
+                pageMetadata.getCurrentPage(),
+                pageMetadata.getTotalPage(),
+                pageMetadata.getPageSize()
+        );
     }
 
     @Builder

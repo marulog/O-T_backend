@@ -1,5 +1,6 @@
 package com.ott.common.web.response;
 
+import com.ott.common.core.response.PageResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,5 +21,9 @@ public class PageResponse<T> {
 
     public static <T> PageResponse<T> toPageResponse(PageInfo pageInfo, List<T> dataList) {
         return new PageResponse<>(pageInfo, dataList);
+    }
+
+    public static <T> PageResponse<T> from(PageResult<T> pageResult) {
+        return PageResponseMapper.from(pageResult);
     }
 }

@@ -1,0 +1,10 @@
+transcoder.job.handle -> status.isTerminal
+transcoder.job.handle -> status.startProcessing
+transcoder.job.handle -> heartbeat.start
+transcoder.job.handle -> diskSpaceGuard.check
+transcoder.job.handle -> videoStorage.download
+transcoder.job.handle -> inspector.inspect
+transcoder.job.handle -> commandExtractor.extractCommand
+transcoder.job.handle -> status.getCompletedResolutions
+transcoder.job.handle -> status.checkAllCompleted
+transcoder.job.handle -> heartbeat.close

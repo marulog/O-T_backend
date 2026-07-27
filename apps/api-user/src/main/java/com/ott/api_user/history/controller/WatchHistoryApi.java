@@ -33,7 +33,7 @@ public interface WatchHistoryApi {
         })
         @PutMapping
         ResponseEntity<Void> upsertWatchHistory(
-                @Parameter(hidden = true) @AuthenticationPrincipal Long memberId, 
+                @Parameter(hidden = true) @AuthenticationPrincipal Long memberId,
                 @Valid @RequestBody WatchHistoryRequest request
         );
 }

@@ -16,10 +16,10 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import com.ott.api_user.common.ContentSource;
 import com.ott.api_user.playlist.dto.request.PlaylistCondition;
 import com.ott.api_user.playlist.dto.response.PlaylistResponse;
-import com.ott.api_user.playlist.dto.response.TopTagPlaylistResponse;
+import com.ott.api_user.playlist.dto.response.TopTagPlaylistResult;
 import com.ott.api_user.playlist.service.PlaylistStrategyService;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,8 +77,8 @@ class PlaylistControllerTest {
                 .positionSec(10)
                 .build();
 
-        PageResponse<PlaylistResponse> pageResponse = PageResponse.toPageResponse(
-                PageInfo.builder().currentPage(2).pageSize(4).build(),
+        PageResult<PlaylistResponse> pageResponse = PageResult.of(
+                PageMetadata.of(2, 0, 4),
                 List.of(playlist)
         );
 
@@ -111,14 +111,14 @@ class PlaylistControllerTest {
     void getTopTagPlaylists_returnsTopTagResponse() throws Exception {
         Long memberId = 88L;
 
-        PageResponse<PlaylistResponse> playlists = PageResponse.toPageResponse(
-                PageInfo.builder().currentPage(0).pageSize(1).build(),
+        PageResult<PlaylistResponse> playlists = PageResult.of(
+                PageMetadata.of(0, 0, 1),
                 List.of(PlaylistResponse.builder().mediaId(1L).title("movie").posterUrl("p").thumbnailUrl("t").mediaType(null).duration(60).positionSec(0).build())
         );
 
-        TopTagPlaylistResponse payload = TopTagPlaylistResponse.builder()
-                .tag(TopTagPlaylistResponse.TagInfo.builder().id(3L).name("tag").build())
-                .category(TopTagPlaylistResponse.CategoryInfo.builder().id(4L).name("cat").build())
+        TopTagPlaylistResult payload = TopTagPlaylistResult.builder()
+                .tag(TopTagPlaylistResult.TagInfo.builder().id(3L).name("tag").build())
+                .category(TopTagPlaylistResult.CategoryInfo.builder().id(4L).name("cat").build())
                 .medias(playlists)
                 .build();
 

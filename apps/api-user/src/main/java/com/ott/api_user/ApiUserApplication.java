@@ -1,22 +1,25 @@
 package com.ott.api_user;
 
+import com.ott.common.security.CommonSecurityConfiguration;
+import com.ott.common.web.CommonWebConfiguration;
+import com.ott.infra.db.config.InfraDbConfiguration;
+import com.ott.infra.redis.InfraRedisConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
 @EnableCaching
-@ComponentScan(basePackages = "com.ott")
-@EntityScan(basePackages = "com.ott.domain")
-@EnableJpaRepositories(basePackages = "com.ott.domain")
-@EnableJpaAuditing
+@Import({
+		InfraDbConfiguration.class,
+		InfraRedisConfiguration.class,
+		CommonWebConfiguration.class,
+		CommonSecurityConfiguration.class
+})
 @EnableAsync
 public class ApiUserApplication {
 

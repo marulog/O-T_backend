@@ -2,12 +2,12 @@ package com.ott.api_user.category.service;
 
 import com.ott.api_user.category.dto.response.CategoryResponse;
 import com.ott.api_user.tag.dto.response.TagResponse;
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
 import com.ott.domain.category.domain.Category;
-import com.ott.domain.category.repository.CategoryRepository;
+import com.ott.infra.db.category.repository.CategoryRepository;
 import com.ott.domain.common.Status;
-import com.ott.domain.tag.repository.TagRepository;
+import com.ott.infra.db.tag.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

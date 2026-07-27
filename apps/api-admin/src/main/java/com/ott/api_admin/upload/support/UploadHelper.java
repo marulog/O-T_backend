@@ -1,11 +1,11 @@
 package com.ott.api_admin.upload.support;
 
-import com.ott.common.web.exception.BusinessException;
-import com.ott.common.web.exception.ErrorCode;
-import com.ott.common.web.response.PageInfo;
-import com.ott.common.web.response.PageResponse;
+import com.ott.common.core.error.BusinessException;
+import com.ott.common.core.error.ErrorCode;
+import com.ott.common.core.response.PageMetadata;
+import com.ott.common.core.response.PageResult;
 import com.ott.domain.member.domain.Member;
-import com.ott.domain.member.repository.MemberRepository;
+import com.ott.infra.db.member.repository.MemberRepository;
 import com.ott.infra.s3.service.S3PresignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -226,7 +226,7 @@ public class UploadHelper {
         );
     }
 
-    public PageResponse<MultipartUploadPartUrl> getMultipartPartUrls(
+    public PageResult<MultipartUploadPartUrl> getMultipartPartUrls(
             String objectKey,
             String uploadId,
             int totalPartCount,
@@ -239,7 +239,7 @@ public class UploadHelper {
 
         int totalPage = (totalPartCount + size - 1) / size;
         if (page >= totalPage) {
-            return PageResponse.toPageResponse(PageInfo.toPageInfo(page, totalPage, size), List.of());
+            return PageResult.of(PageMetadata.of(page, totalPage, size), List.of());
         }
 
         int startPartNumber = (page * size) + 1;
@@ -248,8 +248,8 @@ public class UploadHelper {
         // 페이징(start - end)범위의 url 생성
         List<MultipartUploadPartUrl> dataList = buildMultipartPartUploadUrls(objectKey, uploadId, startPartNumber, endPartNumber);
 
-        return PageResponse.toPageResponse(
-                PageInfo.toPageInfo(page, totalPage, size),
+        return PageResult.of(
+                PageMetadata.of(page, totalPage, size),
                 dataList
         );
     }

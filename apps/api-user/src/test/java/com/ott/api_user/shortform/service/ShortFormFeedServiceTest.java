@@ -8,10 +8,10 @@ import static org.mockito.Mockito.when;
 
 import com.ott.api_user.playlist.service.PlaylistPreferenceService;
 import com.ott.api_user.shortform.dto.response.ShortFormFeedResponse;
-import com.ott.common.web.response.PageResponse;
-import com.ott.domain.bookmark.repository.BookmarkRepository;
+import com.ott.common.core.response.PageResult;
+import com.ott.infra.db.bookmark.repository.BookmarkRepository;
 import com.ott.domain.common.MediaType;
-import com.ott.domain.likes.repository.LikesRepository;
+import com.ott.infra.db.likes.repository.LikesRepository;
 import com.ott.domain.media.domain.Media;
 import com.ott.domain.media.domain.MediaStatus;
 import com.ott.domain.member.domain.Member;
@@ -19,7 +19,7 @@ import com.ott.domain.member.domain.Provider;
 import com.ott.domain.member.domain.Role;
 import com.ott.domain.short_form.domain.ShortForm;
 import com.ott.domain.short_form.domain.ShortForm.ShortFormBuilder;
-import com.ott.domain.short_form.repository.ShortFormRepository;
+import com.ott.infra.db.short_form.repository.ShortFormRepository;
 import com.ott.domain.series.domain.Series;
 import com.ott.domain.series.domain.Series.SeriesBuilder;
 import java.time.LocalDateTime;
@@ -79,10 +79,10 @@ class ShortFormFeedServiceTest {
         when(bookmarkRepository.findBookmarkedMediaIds(eq(memberId), any())).thenReturn(Set.of(latest.getMedia().getId()));
 
         // 서비스가 추천 + 최신 숏폼을 합쳐 DTO로 변환하는지 검사
-        PageResponse<ShortFormFeedResponse> response = shortFormFeedService.getShortFormFeed(memberId, 0, 5);
+        PageResult<ShortFormFeedResponse> response = shortFormFeedService.getShortFormFeed(memberId, 0, 5);
 
         // 페이지 정보와 노출 아이템 개수 검증
-        assertThat(response.getPageInfo().getCurrentPage()).isZero();
+        assertThat(response.getPageMetadata().getCurrentPage()).isZero();
         assertThat(response.getDataList()).hasSize(3);
 
         Set<Long> ids = response.getDataList().stream()
@@ -126,7 +126,7 @@ class ShortFormFeedServiceTest {
         when(likesRepository.findLikedMediaIds(eq(memberId), any())).thenReturn(Set.of());
         when(bookmarkRepository.findBookmarkedMediaIds(eq(memberId), any())).thenReturn(Set.of());
 
-        PageResponse<ShortFormFeedResponse> response = shortFormFeedService.getShortFormFeed(memberId, 0, 5);
+        PageResult<ShortFormFeedResponse> response = shortFormFeedService.getShortFormFeed(memberId, 0, 5);
         assertThat(response.getDataList()).hasSize(2);
         assertThat(response.getDataList()).allMatch(dto -> dto.getShortFormId().equals(recommend.getMedia().getId()));
 

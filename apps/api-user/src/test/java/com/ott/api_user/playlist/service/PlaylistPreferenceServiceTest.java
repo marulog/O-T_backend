@@ -11,12 +11,12 @@ import static org.mockito.Mockito.when;
 
 import com.ott.domain.category.domain.Category;
 import com.ott.domain.common.Status;
-import com.ott.domain.likes.repository.LikesRepository;
-import com.ott.domain.media_tag.repository.MediaTagRepository;
-import com.ott.domain.playback.repository.PlaybackRepository;
-import com.ott.domain.preferred_tag.repository.PreferredTagRepository;
+import com.ott.infra.db.likes.repository.LikesRepository;
+import com.ott.infra.db.media_tag.repository.MediaTagRepository;
+import com.ott.infra.db.playback.repository.PlaybackRepository;
+import com.ott.infra.db.preferred_tag.repository.PreferredTagRepository;
 import com.ott.domain.tag.domain.Tag;
-import com.ott.domain.tag.repository.TagRepository;
+import com.ott.infra.db.tag.repository.TagRepository;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

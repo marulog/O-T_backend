@@ -1,0 +1,3 @@
+api-admin.contents.complete -> reader.getContentsUploadInfo
+api-admin.contents.complete -> uploadHelper.completeMultipartUpload
+api-admin.contents.complete -> writer.createIngestJobWithOutbox
